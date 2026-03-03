@@ -5,14 +5,10 @@ import java.io.IOException;
 
 
 public class Main {
-    static String path = "/sys/class/leds/hp::kbd_backlight/multi_intensity";
-
-    public static void main(String[] args) throws IOException, InterruptedException {
-        int r = 0;
-        int g = 0;
-        int b = 0;
-        int i = 0;
-
+    static String colorPath = "/sys/class/leds/hp::kbd_backlight/multi_intensity";
+    static String brightnessPath = "/sys/class/leds/hp::kbd_backlight/brightness";
+    static int delay = 20;
+    public static void main(String[] args) throws InterruptedException {
 //        ProcessBuilder pb = new ProcessBuilder();
 
 //        while (true){
@@ -85,15 +81,21 @@ public class Main {
 //            }
 //            b=0;
 //        }
+        try (FileWriter writer = new FileWriter(brightnessPath)){
+            writer.write(255); // Fedora reduces brightness to 10 after every boot;
+            writer.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         int h = 0;
-        try (FileWriter writer = new FileWriter(path)) {
+        try (FileWriter writer = new FileWriter(colorPath)) {
             while (true){
                 h=h%360;
                 int[] rgb = hsvToRgb(h);
                 writer.write(rgb[0] + " " +  rgb[1] + " " + rgb[2]);
                 writer.flush();
                 h+=1;
-                Thread.sleep(20);
+                Thread.sleep(delay);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -102,18 +104,15 @@ public class Main {
     public static int[] hsvToRgb(int h){
         int sector = h / 60;
         double f = ((double) h / 60) - sector;
-        double p = 0;
         double q = 1 - f;
-        double t = f;
-
-        double r=0, g=0 , b = 0;
+        double r=0, g=0, b =0;
 
         switch (sector) {
-            case 0: r=1; g=t; b=0; break;
+            case 0: r=1; g=f; b=0; break;
             case 1: r=q; g=1; b=0; break;
-            case 2: r=0; g=1; b=t; break;
+            case 2: r=0; g=1; b=f; break;
             case 3: r=0; g=q; b=1; break;
-            case 4: r=t; g=0; b=1; break;
+            case 4: r=f; g=0; b=1; break;
             case 5: r=1; g=0; b=q; break;
         }
 
