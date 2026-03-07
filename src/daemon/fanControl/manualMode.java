@@ -1,6 +1,6 @@
-package fanControl;
+package daemon.fanControl;
 
-import daemon.DaemonState;
+import core.DaemonState;
 
 import java.io.IOException;
 import java.nio.file.Files;

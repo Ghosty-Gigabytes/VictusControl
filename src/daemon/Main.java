@@ -1,6 +1,8 @@
-import daemon.DaemonState;
-import fanControl.fan;
-import keyboardEffects.Keyboard;
+package daemon;
+
+import core.DaemonState;
+import daemon.fanControl.fan;
+import daemon.keyboardEffects.Keyboard;
 
 import java.util.Scanner;
 
@@ -19,17 +21,17 @@ public class Main {
                 System.out.println("tell Mode");
                 String name = scanner.nextLine();
                 if (name.equals("max")){
-                    state.fanMode = DaemonState.FANMode.MAX;
+                    state.fanMode = core.FANMode.MAX;
                     System.out.println("mode:" + state.fanMode);
                     continue;
                 }
                 if (name.equals("auto")){
-                    state.fanMode = DaemonState.FANMode.AUTO;
+                    state.fanMode = core.FANMode.AUTO;
                     System.out.println("mode:" + state.fanMode);
                     continue;
                 }
                 if (name.equals("manual")){
-                    state.fanMode = DaemonState.FANMode.MANUAL;
+                    state.fanMode = core.FANMode.MANUAL;
                     state.fan1_target = 3500;
                     state.fan2_target = 3500;
                     System.out.println("mode:" + state.fanMode);

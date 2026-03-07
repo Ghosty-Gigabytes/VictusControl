@@ -1,14 +1,7 @@
-package daemon;
+package core;
 
 public class DaemonState {
 
-    public enum RGBMode {
-        STATIC, RAINBOW, OFF
-    }
-
-    public enum FANMode {
-        MAX, MANUAL, AUTO
-    }
 
     public volatile FANMode fanMode = FANMode.AUTO;
     public volatile int fan1_max;

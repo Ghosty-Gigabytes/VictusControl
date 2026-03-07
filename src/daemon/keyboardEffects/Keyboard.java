@@ -1,6 +1,7 @@
-package keyboardEffects;
+package daemon.keyboardEffects;
 
-import daemon.DaemonState;
+import core.DaemonState;
+import core.RGBMode;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -19,7 +20,7 @@ public class Keyboard implements Runnable {
     @Override
     public void run() {
         applyMode(state.rgbMode);
-        DaemonState.RGBMode prevMode = state.rgbMode;
+        RGBMode prevMode = state.rgbMode;
 
         while(!Thread.currentThread().isInterrupted()){
             try{
@@ -38,7 +39,7 @@ public class Keyboard implements Runnable {
         executorService.shutdown();
     }
 
-    public void applyMode(DaemonState.RGBMode mode) {
+    public void applyMode(core.RGBMode mode) {
          if (activeMode != null){                          //Used for killing prevMode thread.
              activeMode.cancel(true);                   //activeMode is only used for killing threads, and as static mode isnt used
              activeMode = null;                            //with threads, static mode and off mode (static but value 0,0,0) are null.
@@ -56,5 +57,4 @@ public class Keyboard implements Runnable {
                  break;
          }
     }
-
 }

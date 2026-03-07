@@ -1,6 +1,8 @@
-package fanControl;
+package daemon.fanControl;
 
-import daemon.DaemonState;
+import core.DaemonState;
+import core.FANMode;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,7 +27,7 @@ public class fan implements Runnable{
         hwmonPath = getFullPath();
         applyMode(state.fanMode);
 
-        DaemonState.FANMode prevMode = state.fanMode;
+        FANMode prevMode = state.fanMode;
 
         while (!Thread.currentThread().isInterrupted()){
             try {
@@ -59,28 +61,28 @@ public class fan implements Runnable{
         }
     }
 
-    private void applyMode(DaemonState.FANMode fanMode) {
+    private void applyMode(core.FANMode fanMode) {
         if (constMode !=null){
             constMode.cancel(true);
             constMode = null;
         }
         switch(fanMode){
-            case DaemonState.FANMode.MAX:
+            case core.FANMode.MAX:
                 try {
                     Files.writeString(Path.of(hwmonPath + "/pwm1_enable"), "0");
                 } catch (IOException e) {
                     throw new RuntimeException("pwm1_enable file not found",e);
                 }
                 break;
-            case DaemonState.FANMode.AUTO:
+            case core.FANMode.AUTO:
                 try {
                     Files.writeString(Path.of(hwmonPath + "/pwm1_enable"), "2");
                 } catch (IOException e) {
                     throw new RuntimeException("pwm1_enable file not found" + hwmonPath + "/pwm1_enable",e);
                 }
                 break;
-            case DaemonState.FANMode.MANUAL:
-                constMode = service.submit(new manualMode(state, hwmonPath));
+            case core.FANMode.MANUAL:
+                constMode = service.submit(new fanControl.manualMode(state, hwmonPath));
                 break;
         }
     }

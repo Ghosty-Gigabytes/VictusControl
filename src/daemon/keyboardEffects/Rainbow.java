@@ -1,5 +1,5 @@
-package keyboardEffects;
-import daemon.DaemonState;
+package daemon.keyboardEffects;
+import core.DaemonState;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
