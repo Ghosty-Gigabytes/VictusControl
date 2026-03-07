@@ -7,8 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class manualMode implements Runnable{
-    private DaemonState state;
-    private Path path;
+    private final DaemonState state;
+    private final Path path;
 
     public manualMode(DaemonState state, Path path){
         this.state = state;

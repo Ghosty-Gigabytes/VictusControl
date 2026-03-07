@@ -14,7 +14,7 @@ public class fan implements Runnable{
     private Path hwmonPath = Path.of("/sys/devices/platform/hp-wmi/hwmon");
     private final DaemonState state;
     private Future<?> constMode;
-    private ExecutorService service = Executors.newSingleThreadExecutor();
+    private final ExecutorService service = Executors.newSingleThreadExecutor();
 
 
     public fan(DaemonState state) {
