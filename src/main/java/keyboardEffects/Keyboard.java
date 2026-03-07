@@ -52,7 +52,7 @@ public class Keyboard implements Runnable {
                  Static.staticRGB(state.r, state.g, state.b, state.brightness);
                  break;
              case OFF:
-                 Static.staticRGB(0,0,0, 0);
+                 Static.offRGB();
                  break;
          }
     }
