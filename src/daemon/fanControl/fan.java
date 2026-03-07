@@ -82,7 +82,7 @@ public class fan implements Runnable{
                 }
                 break;
             case core.FANMode.MANUAL:
-                constMode = service.submit(new fanControl.manualMode(state, hwmonPath));
+                constMode = service.submit(new manualMode(state, hwmonPath));
                 break;
         }
     }
