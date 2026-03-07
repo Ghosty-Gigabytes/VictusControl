@@ -1,10 +1,7 @@
 import daemon.DaemonState;
+import fanControl.fan;
 import keyboardEffects.Keyboard;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Scanner;
 
 
@@ -13,12 +10,30 @@ public class Main {
     public static void main(String[] args) {
         DaemonState state = new DaemonState();
         Thread thread = new Thread(new Keyboard(state));
+        Thread thread1 = new Thread(new fan(state));
+        thread1.start();
         thread.start();
         Runnable test1 = () -> {
-            try {
-                System.out.println(Files.readString(Path.of("/sys/class/leds/hp::kbd_backlight/brightness")));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            Scanner scanner = new Scanner(System.in);
+            while (true){
+                System.out.println("tell Mode");
+                String name = scanner.nextLine();
+                if (name.equals("max")){
+                    state.fanMode = DaemonState.FANMode.MAX;
+                    System.out.println("mode:" + state.fanMode);
+                    continue;
+                }
+                if (name.equals("auto")){
+                    state.fanMode = DaemonState.FANMode.AUTO;
+                    System.out.println("mode:" + state.fanMode);
+                    continue;
+                }
+                if (name.equals("manual")){
+                    state.fanMode = DaemonState.FANMode.MANUAL;
+                    state.fan1_target = 3500;
+                    state.fan2_target = 3500;
+                    System.out.println("mode:" + state.fanMode);
+                }
             }
         };
         Thread test2 = new Thread(test1, "tester");
