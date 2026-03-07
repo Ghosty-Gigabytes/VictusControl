@@ -1,34 +1,24 @@
-import Daemon.DaemonState;
+import daemon.DaemonState;
 import keyboardEffects.Keyboard;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Scanner;
 
 
 public class Main {
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         DaemonState state = new DaemonState();
         Thread thread = new Thread(new Keyboard(state));
         thread.start();
         Runnable test1 = () -> {
-            Scanner scanner = new Scanner(System.in);
-            while (true){
-                System.out.println("tell Mode");
-                String name = scanner.nextLine();
-                if (name.equals("rainbow")){
-                    state.rgbMode = DaemonState.RGBMode.RAINBOW;
-                    System.out.println("mode:" + state.rgbMode);
-                    continue;
-                }
-                if (name.equals("static")){
-                    state.rgbMode = DaemonState.RGBMode.STATIC;
-                    System.out.println("mode:" + state.rgbMode);
-                    continue;
-                }
-                if (name.equals("off")){
-                    state.rgbMode = DaemonState.RGBMode.OFF;
-                    System.out.println("mode:" + state.rgbMode);
-                }
+            try {
+                System.out.println(Files.readString(Path.of("/sys/class/leds/hp::kbd_backlight/brightness")));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         };
         Thread test2 = new Thread(test1, "tester");

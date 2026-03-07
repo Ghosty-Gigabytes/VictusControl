@@ -1,6 +1,6 @@
 package keyboardEffects;
 
-import Daemon.DaemonState;
+import daemon.DaemonState;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -49,12 +49,10 @@ public class Keyboard implements Runnable {
                  activeMode = executorService.submit(new Rainbow(state));
                  break;
              case STATIC:
-                 activeMode = null;
-                 Static.staticRGB(state.r, state.g, state.b);
+                 Static.staticRGB(state.r, state.g, state.b, state.brightness);
                  break;
              case OFF:
-                 activeMode = null;
-                 Static.staticRGB(0,0,0);
+                 Static.staticRGB(0,0,0, 0);
                  break;
          }
     }

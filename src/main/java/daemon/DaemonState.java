@@ -1,4 +1,4 @@
-package Daemon;
+package daemon;
 
 public class DaemonState {
 
