@@ -22,15 +22,14 @@ public class Rainbow implements Runnable{
         Path brightnessPath = Path.of("/sys/class/leds/hp::kbd_backlight/brightness");
         Path colorPath = Path.of("/sys/class/leds/hp::kbd_backlight/multi_intensity");
 
-        try {
-            Files.writeString(brightnessPath, String.valueOf(state.brightness));
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to set brightness", e);
-        }
-
         int h = 0;
         while (!Thread.currentThread().isInterrupted()){
             int[] rgb = hsvToRgb(h%360);
+            try {
+                Files.writeString(brightnessPath, String.valueOf(state.brightness));
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to set brightness", e);
+            }
             try {
                 Files.writeString(colorPath, rgb[0] + " " +  rgb[1] + " " + rgb[2]);
                 h+=1;
