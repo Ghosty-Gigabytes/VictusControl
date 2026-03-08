@@ -27,6 +27,9 @@ public class Fan implements Runnable {
         applyMode(state.fanMode);
 
         FANMode prevMode = state.fanMode;
+        int prevFan1 = state.fan1_target;
+        int prevFan2 = state.fan2_target;
+
 
         while (!Thread.currentThread().isInterrupted()) {
             try {
@@ -37,9 +40,11 @@ public class Fan implements Runnable {
                 break;
             }
 
-            if (prevMode != state.fanMode) {
+            if (prevMode != state.fanMode || prevFan1 != state.fan1_target || prevFan2 != state.fan2_target) {
                 applyMode(state.fanMode);
                 prevMode = state.fanMode;
+                prevFan1 = state.fan1_target;
+                prevFan2 = state.fan2_target;
             }
         }
 
