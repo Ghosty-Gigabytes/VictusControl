@@ -26,7 +26,6 @@ public class Static {
     }
 
     public static void offRGB() {
-
         try {
             Files.writeString(brightnessPath, String.valueOf(0));
         } catch (IOException e) {

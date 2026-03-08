@@ -22,6 +22,11 @@ public class Keyboard implements Runnable {
     public void run() {
         applyMode(state.rgbMode);
         RGBMode prevMode = state.rgbMode;
+        int prevR = state.r;
+        int prevG = state.g;
+        int prevB = state.b;
+        int prevBrightness = state.brightness;
+        int prevSpeed = state.rgbSpeed;
 
         while (!Thread.currentThread().isInterrupted()) {
             try {
@@ -30,10 +35,16 @@ public class Keyboard implements Runnable {
                 Thread.currentThread().interrupt();
                 break;
             }
+            boolean stateChanged = prevMode != state.rgbMode || prevBrightness != state.brightness || prevSpeed != state.rgbSpeed | prevR != state.r || prevG != state.g || prevB != state.b;
 
-            if (prevMode != state.rgbMode) {
+            if (stateChanged) {
                 applyMode(state.rgbMode);
                 prevMode = state.rgbMode;
+                prevR = state.r;
+                prevG = state.g;
+                prevB = state.b;
+                prevBrightness = state.brightness;
+                prevSpeed = state.rgbSpeed;
             }
         }
 

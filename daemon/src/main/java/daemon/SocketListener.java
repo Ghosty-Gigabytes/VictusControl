@@ -56,7 +56,7 @@ public class SocketListener implements Runnable {
         BufferedReader reader = new BufferedReader(new InputStreamReader(Channels.newInputStream(client)));
         String line = reader.readLine();
         if (line == null || line.isBlank()) return;
-
+        System.out.println(line);
         String[] parts = line.trim().split(" ");
         if (parts.length < 2) {
             System.err.println("Invalid command: " + line);
@@ -83,14 +83,16 @@ public class SocketListener implements Runnable {
                 state.rgbMode = RGBMode.OFF;
                 break;
             case "rainbow":
-                state.rgbMode = RGBMode.RAINBOW;
+                state.rgbMode = RGBMode.OFF;
                 state.brightness = Integer.parseInt(parts[2]);
                 state.rgbSpeed = Integer.parseInt(parts[3]);
+                state.rgbMode = RGBMode.RAINBOW;
                 break;
             case "brightness":
                 state.brightness = Integer.parseInt(parts[2]);
                 break;
             case "static":
+                state.rgbMode = RGBMode.OFF;
                 state.r = Integer.parseInt(parts[2]);
                 state.g = Integer.parseInt(parts[3]);
                 state.b = Integer.parseInt(parts[4]);
