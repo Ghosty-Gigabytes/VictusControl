@@ -6,11 +6,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class ManualMode implements Runnable{
+public class ManualMode implements Runnable {
     private final DaemonState state;
     private final Path path;
 
-    public ManualMode(DaemonState state, Path path){
+    public ManualMode(DaemonState state, Path path) {
         this.state = state;
         this.path = path;
     }
@@ -18,13 +18,12 @@ public class ManualMode implements Runnable{
     @Override
     public void run() {
         setFanSpeed();
-        while (!Thread.currentThread().isInterrupted()){
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 Thread.sleep(100_000);
-                if (getFanSpeed(1) == state.fan1_target && getFanSpeed(2) == state.fan2_target){
+                if (getFanSpeed(1) == state.fan1_target && getFanSpeed(2) == state.fan2_target) {
 
-                }
-                else{
+                } else {
                     setFanSpeed();
                 }
 
@@ -34,18 +33,17 @@ public class ManualMode implements Runnable{
         }
     }
 
-    private void setFanSpeed(){
-        while (!Thread.currentThread().isInterrupted()){
+    private void setFanSpeed() {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 Files.writeString(Path.of(path + "/fan1_target"), String.valueOf(state.fan1_target));
                 Files.writeString(Path.of(path + "/fan2_target"), String.valueOf(state.fan2_target));
             } catch (IOException e) {
                 throw new RuntimeException("Target files not found", e);
             }
-            if (getFanSpeed(1) == state.fan1_target && getFanSpeed(2) == state.fan2_target){
+            if (getFanSpeed(1) == state.fan1_target && getFanSpeed(2) == state.fan2_target) {
                 break;
-            }
-            else{
+            } else {
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
@@ -59,7 +57,7 @@ public class ManualMode implements Runnable{
         try {
             return Integer.parseInt(Files.readString(Path.of(path + "/fan" + fan + "_input")));
         } catch (IOException e) {
-            throw new RuntimeException("fan"+fan+"_input file not found", e);
+            throw new RuntimeException("fan" + fan + "_input file not found", e);
         }
     }
 

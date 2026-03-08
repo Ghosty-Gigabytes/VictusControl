@@ -10,7 +10,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class Fan implements Runnable{
+public class Fan implements Runnable {
     private Path hwmonPath = Path.of("/sys/devices/platform/hp-wmi/hwmon");
     private final DaemonState state;
     private Future<?> constMode;
@@ -28,7 +28,7 @@ public class Fan implements Runnable{
 
         FANMode prevMode = state.fanMode;
 
-        while (!Thread.currentThread().isInterrupted()){
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 Thread.sleep(100);
 
@@ -37,7 +37,7 @@ public class Fan implements Runnable{
                 break;
             }
 
-            if (prevMode != state.fanMode){
+            if (prevMode != state.fanMode) {
                 applyMode(state.fanMode);
                 prevMode = state.fanMode;
             }
@@ -47,7 +47,7 @@ public class Fan implements Runnable{
     }
 
     private Path getFullPath() {
-        try (var entries = Files.walk(hwmonPath)){
+        try (var entries = Files.walk(hwmonPath)) {
             return entries
                     .filter(Files::isDirectory)
                     .filter(path -> path.getFileName().toString().startsWith("hwmon"))
@@ -61,23 +61,23 @@ public class Fan implements Runnable{
     }
 
     private void applyMode(core.FANMode fanMode) {
-        if (constMode !=null){
+        if (constMode != null) {
             constMode.cancel(true);
             constMode = null;
         }
-        switch(fanMode){
+        switch (fanMode) {
             case core.FANMode.MAX:
                 try {
                     Files.writeString(Path.of(hwmonPath + "/pwm1_enable"), "0");
                 } catch (IOException e) {
-                    throw new RuntimeException("pwm1_enable file not found",e);
+                    throw new RuntimeException("pwm1_enable file not found", e);
                 }
                 break;
             case core.FANMode.AUTO:
                 try {
                     Files.writeString(Path.of(hwmonPath + "/pwm1_enable"), "2");
                 } catch (IOException e) {
-                    throw new RuntimeException("pwm1_enable file not found" + hwmonPath + "/pwm1_enable",e);
+                    throw new RuntimeException("pwm1_enable file not found" + hwmonPath + "/pwm1_enable", e);
                 }
                 break;
             case core.FANMode.MANUAL:

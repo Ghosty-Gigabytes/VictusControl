@@ -4,9 +4,10 @@ import core.DaemonState;
 import core.FANMode;
 import core.RGBMode;
 
-import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.StandardProtocolFamily;
 import java.net.UnixDomainSocketAddress;
 import java.nio.channels.Channels;
@@ -19,9 +20,10 @@ public class SocketListener implements Runnable {
 
     private DaemonState state;
 
-    public SocketListener(DaemonState state){
+    public SocketListener(DaemonState state) {
         this.state = state;
     }
+
     @Override
     public void run() {
         try {
@@ -41,7 +43,7 @@ public class SocketListener implements Runnable {
         try (ServerSocketChannel channel = ServerSocketChannel.open(StandardProtocolFamily.UNIX)) {
             channel.bind(socketAddress);
             System.out.println("Socket listening at /run/victus-control/victus.sock");
-            while(!Thread.currentThread().isInterrupted()){
+            while (!Thread.currentThread().isInterrupted()) {
                 try (SocketChannel client = channel.accept()) {
                     handleClient(client);
                 }
@@ -64,7 +66,7 @@ public class SocketListener implements Runnable {
         String catagory = parts[0];
         String command = parts[1];
 
-        switch (catagory){
+        switch (catagory) {
             case "keyboard":
                 handleRGB(command, parts);
                 break;
@@ -76,7 +78,7 @@ public class SocketListener implements Runnable {
     }
 
     private void handleRGB(String command, String[] parts) {
-        switch (command){
+        switch (command) {
             case "off":
                 state.rgbMode = RGBMode.OFF;
                 break;
@@ -99,7 +101,7 @@ public class SocketListener implements Runnable {
     }
 
     private void handleFan(String command, String[] parts) {
-        switch (command){
+        switch (command) {
             case "max":
                 state.fanMode = FANMode.MAX;
                 break;

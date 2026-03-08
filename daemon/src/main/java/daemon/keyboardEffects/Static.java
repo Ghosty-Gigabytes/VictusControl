@@ -6,6 +6,7 @@ import java.nio.file.Path;
 
 public class Static {
     private static final Path brightnessPath = Path.of("/sys/class/leds/hp::kbd_backlight/brightness");
+
     public static void staticRGB(int r, int g, int b, int brightness) {
 
         Path colorPath = Path.of("/sys/class/leds/hp::kbd_backlight/multi_intensity");
