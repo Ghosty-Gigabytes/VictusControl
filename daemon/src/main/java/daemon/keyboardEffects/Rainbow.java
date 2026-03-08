@@ -19,8 +19,8 @@ public class Rainbow implements Runnable{
     }
 
     private void rainbowEffect() {
-        Path brightnessPath = Path.of("/sys/class/leds/hp::kbd_backlight/brightness");
-        Path colorPath = Path.of("/sys/class/leds/hp::kbd_backlight/multi_intensity");
+        Path brightnessPath = Path.of("/sys/devices/platform/hp-wmi/leds/hp::kbd_backlight/brightness");
+        Path colorPath = Path.of("/sys/devices/platform/hp-wmi/leds/hp::kbd_backlight/multi_intensity");
 
         int h = 0;
         while (!Thread.currentThread().isInterrupted()){

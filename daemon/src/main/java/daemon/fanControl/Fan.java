@@ -19,7 +19,6 @@ public class Fan implements Runnable{
 
     public Fan(DaemonState state) {
         this.state = state;
-
     }
 
     @Override

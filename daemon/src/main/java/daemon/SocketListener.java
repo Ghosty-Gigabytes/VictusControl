@@ -40,7 +40,7 @@ public class SocketListener implements Runnable {
 
         try (ServerSocketChannel channel = ServerSocketChannel.open(StandardProtocolFamily.UNIX)) {
             channel.bind(socketAddress);
-
+            System.out.println("Socket listening at /run/victus-control/victus.sock");
             while(!Thread.currentThread().isInterrupted()){
                 try (SocketChannel client = channel.accept()) {
                     handleClient(client);
