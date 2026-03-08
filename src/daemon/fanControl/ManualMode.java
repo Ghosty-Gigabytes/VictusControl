@@ -6,11 +6,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class manualMode implements Runnable{
+public class ManualMode implements Runnable{
     private final DaemonState state;
     private final Path path;
 
-    public manualMode(DaemonState state, Path path){
+    public ManualMode(DaemonState state, Path path){
         this.state = state;
         this.path = path;
     }
