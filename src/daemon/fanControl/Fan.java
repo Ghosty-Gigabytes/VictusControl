@@ -10,14 +10,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class fan implements Runnable{
+public class Fan implements Runnable{
     private Path hwmonPath = Path.of("/sys/devices/platform/hp-wmi/hwmon");
     private final DaemonState state;
     private Future<?> constMode;
     private final ExecutorService service = Executors.newSingleThreadExecutor();
 
 
-    public fan(DaemonState state) {
+    public Fan(DaemonState state) {
         this.state = state;
 
     }
@@ -82,7 +82,7 @@ public class fan implements Runnable{
                 }
                 break;
             case core.FANMode.MANUAL:
-                constMode = service.submit(new manualMode(state, hwmonPath));
+                constMode = service.submit(new ManualMode(state, hwmonPath));
                 break;
         }
     }
