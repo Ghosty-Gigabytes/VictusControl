@@ -1,6 +1,5 @@
 package cli;
 
-import core.DaemonState;
 
 import java.io.IOException;
 import java.io.PrintWriter;

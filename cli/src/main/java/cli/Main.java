@@ -1,12 +1,11 @@
 package cli;
 
-import com.sun.security.jgss.GSSUtil;
 import core.DaemonState;
 
 import java.io.IOException;
 
 public class Main {
-    private static final String SOCKET_PATH = "/run/victus-control/victus.sock";
+
     private static SocketClient client;
     private static DaemonState state;
 
