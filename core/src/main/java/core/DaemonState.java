@@ -5,10 +5,10 @@ public class DaemonState {
 
     public volatile FANMode fanMode = FANMode.AUTO;
     public volatile int fan1_max;
-    public volatile int fan1_target;
+    public volatile int fan1_target = 2500;
     public volatile int fan1_input;
     public volatile int fan2_max;
-    public volatile int fan2_target;
+    public volatile int fan2_target = 2500;
     public volatile int fan2_input;
 
 
