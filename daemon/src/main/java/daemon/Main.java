@@ -8,18 +8,16 @@ import daemon.keyboardEffects.Keyboard;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLOutput;
 
 public class Main {
 
 
     public static void main(String[] args) {
         System.out.println("++++VictusControl daemon is starting up++++");
-        DaemonState state = new DaemonState();
-        Thread fanThread = new Thread(new Fan(state), "Fan Thread");
-        Thread keyboardThread = new Thread(new Keyboard(state), "Keyboard Thread");
-        Thread socketThread = new Thread(new SocketListener(state), "SocketListener Thread");
-        initialCheck(state);
+        Thread fanThread = new Thread(new Fan(), "Fan Thread");
+        Thread keyboardThread = new Thread(new Keyboard(), "Keyboard Thread");
+        Thread socketThread = new Thread(new SocketListener(), "SocketListener Thread");
+        initialCheck();
         System.out.println("++++Starting worker threads++++");
         fanThread.start();
         keyboardThread.start();
@@ -27,7 +25,7 @@ public class Main {
 
     }
 
-    private static void initialCheck(DaemonState state) {
+    private static void initialCheck() {
         System.out.println("-Checking if hp-wmi module is loaded");
         if (!Files.exists(Path.of("/sys/devices/platform/hp-wmi"))){
             throw new RuntimeException("hp-wmi platform not found. Is the hp-wmi-fan-and-backlight-control module loaded?");
@@ -38,29 +36,29 @@ public class Main {
 
         System.out.println("-Getting path for hwmon directory");
         try (var entries = Files.walk(Path.of("/sys/devices/platform/hp-wmi/hwmon"))) {
-            state.hwmonPath = entries
+            DaemonState.hwmonPath = entries
                     .filter(Files::isDirectory)
                     .filter(path -> path.getFileName().toString().startsWith("hwmon"))
                     .filter(path -> path.resolve("pwm1_enable").toFile().exists())
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("HP hwmon directory not found"));
-            System.out.println("|-OK! Path is " + state.hwmonPath);
+            System.out.println("|-OK! Path is " + DaemonState.hwmonPath);
         } catch (IOException e) {
             throw new RuntimeException("/sys/devices/platform/hp-wmi/hwmon is either not accessible or does not exist.");
         }
 
         System.out.println("-Getting fan parameters");
         try {
-            state.fan1_max = Integer.parseInt(Files.readString(state.hwmonPath.resolve("fan1_max")).trim());
-            state.fan2_max = Integer.parseInt(Files.readString(state.hwmonPath.resolve("fan2_max")).trim());
-            state.fan1_input = Integer.parseInt(Files.readString(state.hwmonPath.resolve("fan1_input")).trim());
-            state.fan2_input = Integer.parseInt(Files.readString(state.hwmonPath.resolve("fan2_input")).trim());
-            state.pwmMode = Integer.parseInt(Files.readString(state.hwmonPath.resolve("pwm1_enable")).trim());
-            System.out.println("|-Fan1 Max RPM:" + state.fan1_max);
-            System.out.println("|-Fan2 Max RPM:" + state.fan2_max);
-            System.out.println("|-Fan1 Current RPM:" + state.fan1_input);
-            System.out.println("|-Fan2 Current RPM:" + state.fan2_input);
-            switch (state.pwmMode){
+            DaemonState.fan1_max = Integer.parseInt(Files.readString(DaemonState.hwmonPath.resolve("fan1_max")).trim());
+            DaemonState.fan2_max = Integer.parseInt(Files.readString(DaemonState.hwmonPath.resolve("fan2_max")).trim());
+            DaemonState.fan1_input = Integer.parseInt(Files.readString(DaemonState.hwmonPath.resolve("fan1_input")).trim());
+            DaemonState.fan2_input = Integer.parseInt(Files.readString(DaemonState.hwmonPath.resolve("fan2_input")).trim());
+            DaemonState.pwmMode = Integer.parseInt(Files.readString(DaemonState.hwmonPath.resolve("pwm1_enable")).trim());
+            System.out.println("|-Fan1 Max RPM:" + DaemonState.fan1_max);
+            System.out.println("|-Fan2 Max RPM:" + DaemonState.fan2_max);
+            System.out.println("|-Fan1 Current RPM:" + DaemonState.fan1_input);
+            System.out.println("|-Fan2 Current RPM:" + DaemonState.fan2_input);
+            switch (DaemonState.pwmMode){
                 case 0:
                     System.out.println("|-Current PWM mode: MAX (0)");
                     break;
@@ -86,17 +84,17 @@ public class Main {
                     "No write access to /sys/devices/platform/hp-wmi/leds/hp::kbd_backlight/multi_intensity. Check udev rules or run as root."
             );
         }
-        if (!Files.isWritable(state.hwmonPath.resolve("fan1_target"))) {
+        if (!Files.isWritable(DaemonState.hwmonPath.resolve("fan1_target"))) {
             throw new RuntimeException(
                     "No write access to fan controls. Check udev rules or run as root."
             );
         }
-        if (!Files.isWritable(state.hwmonPath.resolve("fan2_target"))) {
+        if (!Files.isWritable(DaemonState.hwmonPath.resolve("fan2_target"))) {
             throw new RuntimeException(
                     "No write access to fan controls. Check udev rules or run as root."
             );
         }
-        if (!Files.isWritable(state.hwmonPath.resolve("pwm1_enable"))) {
+        if (!Files.isWritable(DaemonState.hwmonPath.resolve("pwm1_enable"))) {
             throw new RuntimeException(
                     "No write access to fan controls. Check udev rules or run as root."
             );

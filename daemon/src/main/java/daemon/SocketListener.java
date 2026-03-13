@@ -16,12 +16,6 @@ import java.nio.file.Path;
 
 public class SocketListener implements Runnable {
 
-    private DaemonState state;
-
-    public SocketListener(DaemonState state) {
-        this.state = state;
-    }
-
     @Override
     public void run() {
         try {
@@ -104,24 +98,24 @@ public class SocketListener implements Runnable {
     private void handleSetRGB(String command, String[] parts) {
         switch (command) {
             case "off":
-                state.rgbMode = RGBMode.OFF;
+                DaemonState.rgbMode = RGBMode.OFF;
                 break;
             case "rainbow":
-                state.rgbMode = RGBMode.OFF;
-                state.brightness = Integer.parseInt(parts[2]);
-                state.rgbSpeed = Integer.parseInt(parts[3]);
-                state.rgbMode = RGBMode.RAINBOW;
+                DaemonState.rgbMode = RGBMode.OFF;
+                DaemonState.brightness = Integer.parseInt(parts[2]);
+                DaemonState.rgbSpeed = Integer.parseInt(parts[3]);
+                DaemonState.rgbMode = RGBMode.RAINBOW;
                 break;
             case "brightness":
-                state.brightness = Integer.parseInt(parts[2]);
+                DaemonState.brightness = Integer.parseInt(parts[2]);
                 break;
             case "static":
-                state.rgbMode = RGBMode.OFF;
-                state.r = Integer.parseInt(parts[2]);
-                state.g = Integer.parseInt(parts[3]);
-                state.b = Integer.parseInt(parts[4]);
-                state.brightness = Integer.parseInt(parts[5]);
-                state.rgbMode = RGBMode.STATIC;
+                DaemonState.rgbMode = RGBMode.OFF;
+                DaemonState.r = Integer.parseInt(parts[2]);
+                DaemonState.g = Integer.parseInt(parts[3]);
+                DaemonState.b = Integer.parseInt(parts[4]);
+                DaemonState.brightness = Integer.parseInt(parts[5]);
+                DaemonState.rgbMode = RGBMode.STATIC;
                 break;
         }
     }
@@ -129,15 +123,15 @@ public class SocketListener implements Runnable {
     private void handleSetFan(String command, String[] parts) {
         switch (command) {
             case "max":
-                state.fanMode = FANMode.MAX;
+                DaemonState.fanMode = FANMode.MAX;
                 break;
             case "auto":
-                state.fanMode = FANMode.AUTO;
+                DaemonState.fanMode = FANMode.AUTO;
                 break;
             case "manual":
-                state.fan1_target = Integer.parseInt(parts[2]);
-                state.fan2_target = Integer.parseInt(parts[3]);
-                state.fanMode = FANMode.MANUAL;
+                DaemonState.fan1_target = Integer.parseInt(parts[2]);
+                DaemonState.fan2_target = Integer.parseInt(parts[3]);
+                DaemonState.fanMode = FANMode.MANUAL;
                 break;
 
         }

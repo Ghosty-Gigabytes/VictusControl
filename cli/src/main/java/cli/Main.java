@@ -10,7 +10,6 @@ import java.nio.file.Files;
 public class Main {
 
     private static SocketClient client;
-    private static DaemonState state;
 
     public static void main(String[] args) {
         if (args.length == 0) {
@@ -19,14 +18,13 @@ public class Main {
         }
 
         client = new SocketClient();
-        state = new DaemonState();
 
         try {
             switch (args[0]) {
                 case "setkeyboard" -> handleSetKeyboard(args);
                 case "setfan"      -> handleSetFan(args);
-                case "getKeyboard" -> handleGetKeyboard(args);
-                case "getFan"      -> handleGetFan(args);
+                case "getKeyboard" -> handleGetKeyboard();
+                case "getFan"      -> handleGetFan();
                 case "help"        -> printHelp();
                 case "about"       -> printAbout();
                 default         -> System.out.println("Unknown command. Run 'victus-ctl help'");
@@ -40,7 +38,7 @@ public class Main {
     private static void printAbout() {
     }
 
-    private static void handleGetFan(String[] args) throws IOException {
+    private static void handleGetFan() throws IOException {
         String fanDataString = client.sendCommand("getFan");
         JSONObject fanData = new JSONObject(fanDataString);
 
@@ -64,7 +62,7 @@ public class Main {
         System.out.println("|-Fan2 Current RPM:" + fanData.get("fan2Input"));
     }
 
-    private static void handleGetKeyboard(String[] args) {
+    private static void handleGetKeyboard() {
         
     }
 

@@ -7,20 +7,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class ManualMode implements Runnable {
-    private final DaemonState state;
-
-
-    public ManualMode(DaemonState state) {
-        this.state = state;
-    }
-
     @Override
     public void run() {
         setFanSpeed();
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 Thread.sleep(100_000);
-                if (getFanSpeed(1) == state.fan1_target && getFanSpeed(2) == state.fan2_target) {
+                if (getFanSpeed(1) == DaemonState.fan1_target && getFanSpeed(2) == DaemonState.fan2_target) {
 
                 } else {
                     setFanSpeed();
@@ -35,12 +28,12 @@ public class ManualMode implements Runnable {
     private void setFanSpeed() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                Files.writeString(Path.of(state.hwmonPath + "/fan1_target"), String.valueOf(state.fan1_target));
-                Files.writeString(Path.of(state.hwmonPath + "/fan2_target"), String.valueOf(state.fan2_target));
+                Files.writeString(Path.of(DaemonState.hwmonPath + "/fan1_target"), String.valueOf(DaemonState.fan1_target));
+                Files.writeString(Path.of(DaemonState.hwmonPath + "/fan2_target"), String.valueOf(DaemonState.fan2_target));
             } catch (IOException e) {
                 throw new RuntimeException("Target files not found", e);
             }
-            if (getFanSpeed(1) == state.fan1_target && getFanSpeed(2) == state.fan2_target) {
+            if (getFanSpeed(1) == DaemonState.fan1_target && getFanSpeed(2) == DaemonState.fan2_target) {
                 break;
             } else {
                 try {
@@ -54,7 +47,7 @@ public class ManualMode implements Runnable {
 
     private int getFanSpeed(int fan) {
         try {
-            return Integer.parseInt(Files.readString(Path.of(state.hwmonPath + "/fan" + fan + "_input")));
+            return Integer.parseInt(Files.readString(Path.of(DaemonState.hwmonPath + "/fan" + fan + "_input")));
         } catch (IOException e) {
             throw new RuntimeException("fan" + fan + "_input file not found", e);
         }

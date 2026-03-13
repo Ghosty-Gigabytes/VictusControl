@@ -8,25 +8,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class Keyboard implements Runnable {
-
-    private final DaemonState state;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private Future<?> activeMode;
 
-
-    public Keyboard(DaemonState state) {
-        this.state = state;
-    }
-
     @Override
     public void run() {
-        applyMode(state.rgbMode);
-        RGBMode prevMode = state.rgbMode;
-        int prevR = state.r;
-        int prevG = state.g;
-        int prevB = state.b;
-        int prevBrightness = state.brightness;
-        int prevSpeed = state.rgbSpeed;
+        applyMode(DaemonState.rgbMode);
+        RGBMode prevMode = DaemonState.rgbMode;
+        int prevR = DaemonState.r;
+        int prevG = DaemonState.g;
+        int prevB = DaemonState.b;
+        int prevBrightness = DaemonState.brightness;
+        int prevSpeed = DaemonState.rgbSpeed;
 
         while (!Thread.currentThread().isInterrupted()) {
             try {
@@ -35,16 +28,16 @@ public class Keyboard implements Runnable {
                 Thread.currentThread().interrupt();
                 break;
             }
-            boolean stateChanged = prevMode != state.rgbMode || prevBrightness != state.brightness || prevSpeed != state.rgbSpeed | prevR != state.r || prevG != state.g || prevB != state.b;
+            boolean stateChanged = prevMode != DaemonState.rgbMode || prevBrightness != DaemonState.brightness || prevSpeed != DaemonState.rgbSpeed | prevR != DaemonState.r || prevG != DaemonState.g || prevB != DaemonState.b;
 
             if (stateChanged) {
-                applyMode(state.rgbMode);
-                prevMode = state.rgbMode;
-                prevR = state.r;
-                prevG = state.g;
-                prevB = state.b;
-                prevBrightness = state.brightness;
-                prevSpeed = state.rgbSpeed;
+                applyMode(DaemonState.rgbMode);
+                prevMode = DaemonState.rgbMode;
+                prevR = DaemonState.r;
+                prevG = DaemonState.g;
+                prevB = DaemonState.b;
+                prevBrightness = DaemonState.brightness;
+                prevSpeed = DaemonState.rgbSpeed;
             }
         }
 
@@ -53,16 +46,16 @@ public class Keyboard implements Runnable {
 
     public void applyMode(core.RGBMode mode) {
         if (activeMode != null) {                          //Used for killing prevMode thread.
-            activeMode.cancel(true);                   //activeMode is only used for killing threads, and as static mode isnt used
+            activeMode.cancel(true);                   //activeMode is only used for killing threads, and as static mode isn't used
             activeMode = null;                            //with threads, static mode and off mode (static but value 0,0,0) are null.
         }
 
         switch (mode) {
             case RAINBOW:
-                activeMode = executorService.submit(new Rainbow(state));
+                activeMode = executorService.submit(new Rainbow());
                 break;
             case STATIC:
-                Static.staticRGB(state.r, state.g, state.b, state.brightness);
+                Static.staticRGB(DaemonState.r, DaemonState.g, DaemonState.b, DaemonState.brightness);
                 break;
             case OFF:
                 Static.offRGB();

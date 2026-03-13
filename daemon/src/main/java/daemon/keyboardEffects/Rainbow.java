@@ -7,17 +7,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class Rainbow implements Runnable {
-
-    private final DaemonState state;
-
     @Override
     public void run() {
         rainbowEffect();
-    }
-
-    public Rainbow(DaemonState state) {
-        this.state = state;
-
     }
 
     private void rainbowEffect() {
@@ -28,14 +20,14 @@ public class Rainbow implements Runnable {
         while (!Thread.currentThread().isInterrupted()) {
             int[] rgb = hsvToRgb(h % 360);
             try {
-                Files.writeString(brightnessPath, String.valueOf(state.brightness));
+                Files.writeString(brightnessPath, String.valueOf(DaemonState.brightness));
             } catch (IOException e) {
                 throw new RuntimeException("Failed to set brightness", e);
             }
             try {
                 Files.writeString(colorPath, rgb[0] + " " + rgb[1] + " " + rgb[2]);
                 h += 1;
-                Thread.sleep(state.rgbSpeed);
+                Thread.sleep(DaemonState.rgbSpeed);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to write color values", e);
             } catch (InterruptedException e) {
