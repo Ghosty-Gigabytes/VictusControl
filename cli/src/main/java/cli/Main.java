@@ -3,7 +3,6 @@ package cli;
 import core.DaemonState;
 import org.json.JSONObject;
 import java.io.IOException;
-
 public class Main {
 
     private static SocketClient client;
@@ -30,10 +29,6 @@ public class Main {
             System.err.println("Could not connect to daemon — is it running?");
             System.exit(1);
         }
-    }
-
-    private static void printAbout() throws IOException {
-
     }
 
     private static void handleGetFan() throws IOException {
@@ -157,4 +152,47 @@ public class Main {
                   victus-ctl fan manual <fan1_rpm> <fan2_rpm>
                 """);
     }
+
+    private static void printAbout() {
+        // ANSI color codes
+        final String RESET  = "\033[0m";
+        final String BOLD   = "\033[1m";
+        final String CYAN   = "\033[36m";
+        final String BLUE   = "\033[34m";
+        final String GREEN  = "\033[32m";
+        final String YELLOW = "\033[33m";
+        final String DIM    = "\033[2m";
+
+        System.out.println(BLUE + BOLD + """
+
+            ██╗   ██╗██╗ ██████╗████████╗██╗   ██╗███████╗
+            ██║   ██║██║██╔════╝╚══██╔══╝██║   ██║██╔════╝
+            ██║   ██║██║██║        ██║   ██║   ██║███████╗
+            ╚██╗ ██╔╝██║██║        ██║   ██║   ██║╚════██║
+             ╚████╔╝ ██║╚██████╗   ██║   ╚██████╔╝███████║
+              ╚═══╝  ╚═╝ ╚═════╝   ╚═╝    ╚═════╝ ╚══════╝
+
+       ██████╗ ██████╗ ███╗   ██╗████████╗██████╗  ██████╗ ██╗
+      ██╔════╝██╔═══██╗████╗  ██║╚══██╔══╝██╔══██╗██╔═══██╗██║
+      ██║     ██║   ██║██╔██╗ ██║   ██║   ██████╔╝██║   ██║██║
+      ██║     ██║   ██║██║╚██╗██║   ██║   ██╔══██╗██║   ██║██║
+      ╚██████╗╚██████╔╝██║ ╚████║   ██║   ██║  ██║╚██████╔╝███████╗
+       ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+    """ + RESET);
+        System.out.println();
+        System.out.println(DIM   + "        ┌─────────────────────────────────────────────┐" + RESET);
+        System.out.println(RESET + "        │  " + YELLOW + "Version  " + RESET + ": " + GREEN + BOLD + "1.0.0" + RESET + "                           │");
+        System.out.println(RESET + "        │  " + YELLOW + "Author   " + RESET + ": ghosty-gigabytes                │");
+        System.out.println(RESET + "        │  " + YELLOW + "License  " + RESET + ": GPL-3.0                         │");
+        System.out.println(RESET + "        │  " + YELLOW + "GitHub   " + RESET + ": github.com/ghosty-gigabytes/    │");
+        System.out.println(RESET + "        │             VictusControl                   │");
+        System.out.println(DIM   + "        ├─────────────────────────────────────────────┤" + RESET);
+        System.out.println(RESET + "        │  Keyboard backlight and fan control         │");
+        System.out.println(RESET + "        │  daemon for HP Victus laptops on Linux.     │");
+        System.out.println(RESET + "        │                                             │");
+        System.out.println(RESET + "        │  Run " + CYAN + "'victus-ctl help'" + RESET + " for usage.           │");
+        System.out.println(DIM   + "        └─────────────────────────────────────────────┘" + RESET);
+        System.out.println();
+    }
+
 }
