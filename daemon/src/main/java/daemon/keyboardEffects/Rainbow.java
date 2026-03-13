@@ -19,22 +19,35 @@ public class Rainbow implements Runnable {
 
         int h = 0;
         while (!Thread.currentThread().isInterrupted()) {
-            int[] rgb = hsvToRgb(h % 360);
             try {
-                Files.writeString(brightnessPath, String.valueOf(DaemonState.brightness));
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to set brightness", e);
+                int currentBrightness = Integer.parseInt(Files.readString(brightnessPath).trim());
+                if (currentBrightness != 0){
+                    int[] rgb = hsvToRgb(h % 360);
+                    if (currentBrightness != DaemonState.brightness){
+                        try {
+                            Files.writeString(brightnessPath, String.valueOf(DaemonState.brightness));
+                        } catch (IOException e) {
+                            throw new RuntimeException("Failed to set brightness", e);
+                        }
+                    }
+                    try {
+                        Files.writeString(colorPath, rgb[0] + " " + rgb[1] + " " + rgb[2]);
+                        h += 1;
+                        Thread.sleep(DaemonState.rgbSpeed);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to write color values", e);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+                else{
+                    Thread.sleep(DaemonState.rgbSpeed);
+                }
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
             }
-            try {
-                Files.writeString(colorPath, rgb[0] + " " + rgb[1] + " " + rgb[2]);
-                h += 1;
-                Thread.sleep(DaemonState.rgbSpeed);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to write color values", e);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
+
         }
 
     }
