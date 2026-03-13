@@ -25,6 +25,19 @@ A Linux utility for controlling keyboard backlight and fan speeds on HP Victus l
 
 ---
 
+## Defaults
+ 
+When optional arguments are omitted, the following default values are used:
+ 
+| Setting | Default Value |
+|---|---|
+| Brightness | 255 |
+| Rainbow delay | 20ms |
+| Fan 1 target | 2500 RPM |
+| Fan 2 target | 2500 RPM |
+ 
+---
+
 ## Requirements
 
 - **Java 21+**
@@ -93,6 +106,21 @@ CLI                              Daemon
  shutdownOutput() ────────────►  readLine() returns (EOF)
  close connection ────────────►  loops back to accept()
 ```
+
+## How Fan Enforcement Works
+
+When in `manual` mode, the daemon does not just set the fan speed once and stop. The `ManualMode` thread continuously verifies the actual fan RPM against the target and rewrites the target if the BIOS overrides it. This ensures the fan speed stays at the user-set value even under thermal events:
+
+```
+write fan1_target, fan2_target
+        │
+        └── read fan1_input, fan2_input
+                │
+                ├── matches target → sleep 100s, check again
+                └── doesn't match → retry write
+```
+
+---
 
 ### Project Structure
 
@@ -263,20 +291,53 @@ java -jar cli.jar help
 
 ---
 
-## How Fan Enforcement Works
-
-When in `manual` mode, the daemon does not just set the fan speed once and stop. The `ManualMode` thread continuously verifies the actual fan RPM against the target and rewrites the target if the BIOS overrides it. This ensures the fan speed stays at the user-set value even under thermal events:
-
+## Socket Protocol Reference
+ 
+Commands are plain text strings sent over `/run/victus-control/victus.sock`. This is useful for writing custom clients (scripts, GUI apps, etc.) without going through the CLI.
+ 
+| Command | Description |
+|---|---|
+| `keyboard rainbow <brightness> <delay_ms>` | Start rainbow effect |
+| `keyboard static <r> <g> <b> <brightness>` | Set static color |
+| `keyboard off` | Turn off backlight |
+| `keyboard brightness <value>` | Set brightness only |
+| `fan auto` | BIOS fan control |
+| `fan max` | Maximum fan speed |
+| `fan manual <fan1_rpm> <fan2_rpm>` | Manual fan speed |
+ 
+Test manually with `socat`:
+ 
+```bash
+# install socat
+sudo dnf install socat   # Fedora
+sudo apt install socat   # Debian/Ubuntu
+ 
+# send commands
+echo "keyboard rainbow 255 20" | socat - UNIX-CONNECT:/run/victus-control/victus.sock
+echo "keyboard static 255 0 128 255" | socat - UNIX-CONNECT:/run/victus-control/victus.sock
+echo "fan manual 3000 3500" | socat - UNIX-CONNECT:/run/victus-control/victus.sock
 ```
-write fan1_target, fan2_target
-        │
-        └── read fan1_input, fan2_input
-                │
-                ├── matches target → sleep 100s, check again
-                └── doesn't match → retry write
-```
-
+ 
 ---
+
+## Viewing Daemon Logs
+ 
+```bash
+# follow live logs
+sudo journalctl -u rgbd.service -f
+ 
+# last 50 lines
+sudo journalctl -u rgbd.service -n 50
+ 
+# all logs since last boot
+sudo journalctl -u rgbd.service -b
+ 
+# with precise timestamps
+sudo journalctl -u rgbd.service -b --output=short-precise
+```
+ 
+---
+
 
 ## Roadmap
 
