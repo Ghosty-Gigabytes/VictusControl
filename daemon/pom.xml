@@ -18,6 +18,11 @@
             <artifactId>core</artifactId>
             <version>${project.version}</version>    <!-- inherits 1.0.0 from parent -->
         </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20250517</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
