@@ -1,7 +1,10 @@
 package core;
 
+import java.nio.file.Path;
+
 public class DaemonState {
 
+    public volatile Path hwmonPath;
 
     public volatile FANMode fanMode = FANMode.AUTO;
     public volatile int fan1_max;
@@ -10,7 +13,7 @@ public class DaemonState {
     public volatile int fan2_max;
     public volatile int fan2_target = 2500;
     public volatile int fan2_input;
-
+    public volatile int pwmMode;
 
     public volatile RGBMode rgbMode = RGBMode.RAINBOW;
     public volatile int r = 255;
