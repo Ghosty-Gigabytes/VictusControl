@@ -1,8 +1,11 @@
 package cli;
 
 import core.DaemonState;
+import org.json.JSONObject;
 
+import javax.swing.*;
 import java.io.IOException;
+import java.nio.file.Files;
 
 public class Main {
 
@@ -10,7 +13,7 @@ public class Main {
     private static DaemonState state;
 
     public static void main(String[] args) {
-        if (args.length < 2) {
+        if (args.length == 0) {
             System.out.println("Usage: victus-ctl <keyboard|fan> <command> [args]");
             return;
         }
@@ -20,9 +23,12 @@ public class Main {
 
         try {
             switch (args[0]) {
-                case "keyboard" -> handleKeyboard(args);
-                case "fan"      -> handleFan(args);
-                case "help"     -> printHelp();
+                case "setkeyboard" -> handleSetKeyboard(args);
+                case "setfan"      -> handleSetFan(args);
+                case "getKeyboard" -> handleGetKeyboard(args);
+                case "getFan"      -> handleGetFan(args);
+                case "help"        -> printHelp();
+                case "about"       -> printAbout();
                 default         -> System.out.println("Unknown command. Run 'victus-ctl help'");
             }
         } catch (IOException e) {
@@ -31,7 +37,38 @@ public class Main {
         }
     }
 
-    private static void handleKeyboard(String[] args) throws IOException {
+    private static void printAbout() {
+    }
+
+    private static void handleGetFan(String[] args) throws IOException {
+        String fanDataString = client.sendCommand("getFan");
+        JSONObject fanData = new JSONObject(fanDataString);
+
+        System.out.println("-Getting Fan info");
+        switch ((Integer) fanData.get("pwmMode")){
+            case 0:
+                System.out.println("|-Current PWM mode: MAX");
+                break;
+            case 1:
+                System.out.println("|-Current PWM mode: MANUAL");
+                System.out.println("|-Fan1 Target RPM:" + fanData.get("fan1Target"));
+                System.out.println("|-Fan2 Target RPM:" + fanData.get("fan2Target"));
+                break;
+            case 2:
+                System.out.println("|-Current PWM mode: AUTO");
+                break;
+        }
+        System.out.println("|-Fan1 Max RPM:" + fanData.get("fan1Max"));
+        System.out.println("|-Fan2 Max RPM:" + fanData.get("fan2Max"));
+        System.out.println("|-Fan1 Current RPM:" + fanData.get("fan1Input"));
+        System.out.println("|-Fan2 Current RPM:" + fanData.get("fan2Input"));
+    }
+
+    private static void handleGetKeyboard(String[] args) {
+        
+    }
+
+    private static void handleSetKeyboard(String[] args) throws IOException {
         switch (args[1]) {
             case "rainbow" -> {
                 if (args.length == 4){
@@ -39,14 +76,14 @@ public class Main {
                 }
                 else if (args.length == 3){
                     System.out.println("Applying default values");
-                    System.out.println("Delay: " + state.rgbSpeed);
-                    client.sendCommand("keyboard rainbow " + args[2] + " " + state.rgbSpeed);
+                    System.out.println("Delay: " + DaemonState.rgbSpeed);
+                    client.sendCommand("keyboard rainbow " + args[2] + " " + DaemonState.rgbSpeed);
                 }
                 else{
                     System.out.println("Applying default values");
-                    System.out.println("Brightness: " + state.brightness);
-                    System.out.println("Delay: " + state.rgbSpeed + "ms");
-                    client.sendCommand("keyboard rainbow " + state.brightness + " " + state.rgbSpeed);
+                    System.out.println("Brightness: " + DaemonState.brightness);
+                    System.out.println("Delay: " + DaemonState.rgbSpeed + "ms");
+                    client.sendCommand("keyboard rainbow " + DaemonState.brightness + " " + DaemonState.rgbSpeed);
                 }
             }
             case "off"     -> client.sendCommand("keyboard off");
@@ -56,8 +93,8 @@ public class Main {
                 }
                 else if(args.length ==5){
                     System.out.println("Applying default values");
-                    System.out.println("Brightness: " + state.brightness);
-                    client.sendCommand("keyboard static " + args[2] + " " + args[3] + " " + args[4] + " " + state.brightness);
+                    System.out.println("Brightness: " + DaemonState.brightness);
+                    client.sendCommand("keyboard static " + args[2] + " " + args[3] + " " + args[4] + " " + DaemonState.brightness);
                 }
                 else {
                     System.out.println("Usage: victus-ctl keyboard static <r> <g> <b> <brightness>");
@@ -67,7 +104,7 @@ public class Main {
         }
     }
 
-    private static void handleFan(String[] args) throws IOException {
+    private static void handleSetFan(String[] args) throws IOException {
         switch (args[1]) {
             case "auto" -> client.sendCommand("fan auto");
             case "max"  -> client.sendCommand("fan max");
@@ -78,8 +115,8 @@ public class Main {
                     client.sendCommand("fan manual " + args[2] + " " + args[2]);
                 } else {
                     System.out.println("Applying default values");
-                    System.out.println("FAN1: " + state.fan1_target);
-                    System.out.println("FAN2: " + state.fan2_target);
+                    System.out.println("FAN1: " + DaemonState.fan1_target);
+                    System.out.println("FAN2: " + DaemonState.fan2_target);
                 }
             }
             default -> System.out.println("Unknown fan command. Run 'victus-ctl help'");
@@ -101,6 +138,7 @@ public class Main {
                 Fan:
                   victus-ctl fan auto
                   victus-ctl fan max
+                  victus-ctl fan manual
                   victus-ctl fan manual <rpm>
                   victus-ctl fan manual <fan1_rpm> <fan2_rpm>
                 """);

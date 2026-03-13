@@ -33,7 +33,7 @@ public class Main {
             throw new RuntimeException("hp-wmi platform not found. Is the hp-wmi-fan-and-backlight-control module loaded?");
         }
         else{
-            System.out.println("OK! Module is loaded");
+            System.out.println("|-OK! Module is loaded");
         }
 
         System.out.println("-Getting path for hwmon directory");
@@ -44,6 +44,7 @@ public class Main {
                     .filter(path -> path.resolve("pwm1_enable").toFile().exists())
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("HP hwmon directory not found"));
+            System.out.println("|-OK! Path is " + state.hwmonPath);
         } catch (IOException e) {
             throw new RuntimeException("/sys/devices/platform/hp-wmi/hwmon is either not accessible or does not exist.");
         }
@@ -55,19 +56,19 @@ public class Main {
             state.fan1_input = Integer.parseInt(Files.readString(state.hwmonPath.resolve("fan1_input")).trim());
             state.fan2_input = Integer.parseInt(Files.readString(state.hwmonPath.resolve("fan2_input")).trim());
             state.pwmMode = Integer.parseInt(Files.readString(state.hwmonPath.resolve("pwm1_enable")).trim());
-            System.out.println("Fan1 Max RPM:" + state.fan1_max);
-            System.out.println("Fan2 Max RPM:" + state.fan2_max);
-            System.out.println("Fan1 Current RPM:" + state.fan1_input);
-            System.out.println("Fan2 Current RPM:" + state.fan2_input);
+            System.out.println("|-Fan1 Max RPM:" + state.fan1_max);
+            System.out.println("|-Fan2 Max RPM:" + state.fan2_max);
+            System.out.println("|-Fan1 Current RPM:" + state.fan1_input);
+            System.out.println("|-Fan2 Current RPM:" + state.fan2_input);
             switch (state.pwmMode){
                 case 0:
-                    System.out.println("Current PWM mode: MAX (0)");
+                    System.out.println("|-Current PWM mode: MAX (0)");
                     break;
                 case 1:
-                    System.out.println("Current PWM mode: MANUAL (1)");
+                    System.out.println("|-Current PWM mode: MANUAL (1)");
                     break;
                 case 2:
-                    System.out.println("Current PWM mode: AUTO (2)");
+                    System.out.println("|-Current PWM mode: AUTO (2)");
                     break;
             }
         } catch (IOException e) {
