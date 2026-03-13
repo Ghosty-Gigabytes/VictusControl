@@ -32,7 +32,8 @@ public class Main {
         }
     }
 
-    private static void printAbout() {
+    private static void printAbout() throws IOException {
+
     }
 
     private static void handleGetFan() throws IOException {
@@ -59,8 +60,25 @@ public class Main {
         System.out.println("|-Fan2 Current RPM:" + fanData.get("fan2Input"));
     }
 
-    private static void handleGetKeyboard() {
-        
+    private static void handleGetKeyboard() throws IOException {
+        String kbDataString = client.sendCommand("getKeyboard");
+        JSONObject kbData = new JSONObject(kbDataString);
+
+        System.out.println("-Getting Keyboard info");
+        System.out.println("|-Current Mode: " + kbData.get("rgbMode"));
+        switch ((String) kbData.get("rgbMode")){
+            case "RAINBOW":
+                System.out.println("|-Current Brightness: " + kbData.get("brightness"));
+                System.out.println("|-Max brightness: " + kbData.get("maxBrightness"));
+                System.out.println("|-Delay: " + kbData.get("speed") + "ms");
+                break;
+            case "STATIC":
+                System.out.println("|-Red: " + kbData.get("r"));
+                System.out.println("|-Green: " + kbData.get("g"));
+                System.out.println("|-Blue: " + kbData.get("b"));
+                System.out.println("|-Current Brightness: " + kbData.get("brightness"));
+                System.out.println("|-Max brightness: " + kbData.get("maxBrightness"));
+        }
     }
 
     private static void handleSetKeyboard(String[] args) throws IOException {

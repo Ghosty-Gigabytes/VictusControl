@@ -21,6 +21,7 @@ public class DaemonState {
     public static volatile int b = 0;
     public static volatile int rgbSpeed = 20;
     public static volatile int brightness = 255;
+    public static volatile int maxBrightness;
 
 
 }

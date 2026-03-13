@@ -73,6 +73,15 @@ public class Main {
             throw new RuntimeException("Fan Parameters are not accessible.");
         }
 
+        System.out.println("-Getting Keyboard parameters");
+        try{
+            DaemonState.maxBrightness = Integer.parseInt(Files.readString(Path.of("/sys/devices/platform/hp-wmi/leds/hp::kbd_backlight/max_brightness")).trim());
+            System.out.println("|-Max Brightness: " + DaemonState.maxBrightness);
+            DaemonState.brightness = Integer.parseInt(Files.readString(Path.of("/sys/devices/platform/hp-wmi/leds/hp::kbd_backlight/brightness")).trim());
+            System.out.println("|-Current Brightness: " + DaemonState.brightness);
+        } catch (IOException e) {
+            throw new RuntimeException("Keyboard Parameters are nto accessible.");
+        }
         System.out.println("-Checking write permissions");
         if (!Files.isWritable(Path.of("/sys/class/leds/hp::kbd_backlight/brightness"))) {
             throw new RuntimeException(
@@ -99,6 +108,7 @@ public class Main {
                     "No write access to fan controls. Check udev rules or run as root."
             );
         }
+        System.out.println("|-OK! Write access is available");
     }
 
 

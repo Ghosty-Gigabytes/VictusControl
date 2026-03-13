@@ -74,7 +74,22 @@ public class SocketListener implements Runnable {
 
     private void handleGetRGB(SocketChannel client) {
         JSONObject keyboardData = new JSONObject();
+        keyboardData.put("rgbMode", DaemonState.rgbMode);
+        if (DaemonState.rgbMode.equals(RGBMode.RAINBOW)){
+            keyboardData.put("brightness", DaemonState.brightness);
+            keyboardData.put("maxBrightness", DaemonState.maxBrightness);
+            keyboardData.put("speed", DaemonState.rgbSpeed);
+        }
+        else if (DaemonState.rgbMode.equals(RGBMode.STATIC)){
+            keyboardData.put("r", DaemonState.r);
+            keyboardData.put("g", DaemonState.g);
+            keyboardData.put("b", DaemonState.b);
+            keyboardData.put("brightness", DaemonState.brightness);
+            keyboardData.put("maxBrightness", DaemonState.maxBrightness);
+        }
 
+        PrintWriter writer = new PrintWriter(Channels.newOutputStream(client), true);
+        writer.println(keyboardData);
     }
 
     private void handleGetFan(SocketChannel client) {
