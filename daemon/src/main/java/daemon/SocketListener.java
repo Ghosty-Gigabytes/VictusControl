@@ -3,11 +3,9 @@ package daemon;
 import core.DaemonState;
 import core.FANMode;
 import core.RGBMode;
+import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.StandardProtocolFamily;
 import java.net.UnixDomainSocketAddress;
 import java.nio.channels.Channels;
@@ -58,26 +56,52 @@ public class SocketListener implements Runnable {
         if (line == null || line.isBlank()) return;
         System.out.println(line);
         String[] parts = line.trim().split(" ");
-        if (parts.length < 2) {
+        if (parts.length == 0) {
             System.err.println("Invalid command: " + line);
             return;
         }
 
-        String catagory = parts[0];
-        String command = parts[1];
 
-        switch (catagory) {
-            case "keyboard":
-                handleRGB(command, parts);
+        switch (parts[0]) {
+            case "setKeyboard":
+                handleSetRGB(parts[1], parts);
                 break;
-            case "fan":
-                handleFan(command, parts);
+            case "setFan":
+                handleSetFan(parts[1], parts);
+                break;
+            case "getFan":
+                handleGetFan(client);
+                break;
+            case "getKeyboard":
+                handleGetRGB(client);
                 break;
         }
-
     }
 
-    private void handleRGB(String command, String[] parts) {
+    private void handleGetRGB(SocketChannel client) {
+    }
+
+    private void handleGetFan(SocketChannel client) {
+        JSONObject fanData = new JSONObject();
+        fanData.put("pwmMode", DaemonState.pwmMode);
+        if (DaemonState.pwmMode == 1){
+            fanData.put("fan1Target", DaemonState.fan1_target);
+            fanData.put("fan2Target", DaemonState.fan2_target);
+        }
+        fanData.put("fan1Max", DaemonState.fan1_max);
+        fanData.put("fan2Max", DaemonState.fan2_max);
+        try {
+            fanData.put("fan2Input", Integer.parseInt(Files.readString(DaemonState.hwmonPath.resolve("fan1_input")).trim()));
+            fanData.put("fan1Input", Integer.parseInt(Files.readString(DaemonState.hwmonPath.resolve("fan2_input")).trim()));
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot read current RPM state.", e);
+        }
+
+        PrintWriter writer = new PrintWriter(Channels.newOutputStream(client), true);
+        writer.println(fanData);
+    }
+
+    private void handleSetRGB(String command, String[] parts) {
         switch (command) {
             case "off":
                 state.rgbMode = RGBMode.OFF;
@@ -102,7 +126,7 @@ public class SocketListener implements Runnable {
         }
     }
 
-    private void handleFan(String command, String[] parts) {
+    private void handleSetFan(String command, String[] parts) {
         switch (command) {
             case "max":
                 state.fanMode = FANMode.MAX;
