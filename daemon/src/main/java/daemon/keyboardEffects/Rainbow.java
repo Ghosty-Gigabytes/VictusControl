@@ -12,6 +12,7 @@ public class Rainbow implements Runnable {
         rainbowEffect();
     }
 
+    @SuppressWarnings("BusyWait")
     private void rainbowEffect() {
         Path brightnessPath = Path.of("/sys/devices/platform/hp-wmi/leds/hp::kbd_backlight/brightness");
         Path colorPath = Path.of("/sys/devices/platform/hp-wmi/leds/hp::kbd_backlight/multi_intensity");

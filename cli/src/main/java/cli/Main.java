@@ -2,10 +2,7 @@ package cli;
 
 import core.DaemonState;
 import org.json.JSONObject;
-
-import javax.swing.*;
 import java.io.IOException;
-import java.nio.file.Files;
 
 public class Main {
 
@@ -21,8 +18,8 @@ public class Main {
 
         try {
             switch (args[0]) {
-                case "setkeyboard" -> handleSetKeyboard(args);
-                case "setfan"      -> handleSetFan(args);
+                case "setKeyboard" -> handleSetKeyboard(args);
+                case "setFan"      -> handleSetFan(args);
                 case "getKeyboard" -> handleGetKeyboard();
                 case "getFan"      -> handleGetFan();
                 case "help"        -> printHelp();
@@ -70,29 +67,29 @@ public class Main {
         switch (args[1]) {
             case "rainbow" -> {
                 if (args.length == 4){
-                    client.sendCommand("keyboard rainbow " + args[2] + " " + args[3]);
+                    client.sendCommand("setKeyboard rainbow " + args[2] + " " + args[3]);
                 }
                 else if (args.length == 3){
                     System.out.println("Applying default values");
                     System.out.println("Delay: " + DaemonState.rgbSpeed);
-                    client.sendCommand("keyboard rainbow " + args[2] + " " + DaemonState.rgbSpeed);
+                    client.sendCommand("setKeyboard rainbow " + args[2] + " " + DaemonState.rgbSpeed);
                 }
                 else{
                     System.out.println("Applying default values");
                     System.out.println("Brightness: " + DaemonState.brightness);
                     System.out.println("Delay: " + DaemonState.rgbSpeed + "ms");
-                    client.sendCommand("keyboard rainbow " + DaemonState.brightness + " " + DaemonState.rgbSpeed);
+                    client.sendCommand("setKeyboard rainbow " + DaemonState.brightness + " " + DaemonState.rgbSpeed);
                 }
             }
-            case "off"     -> client.sendCommand("keyboard off");
+            case "off"     -> client.sendCommand("setKeyboard off");
             case "static"  -> {
                 if (args.length == 6) {
-                    client.sendCommand("keyboard static " + args[2] + " " + args[3] + " " + args[4] + " " + args[5]);
+                    client.sendCommand("setKeyboard static " + args[2] + " " + args[3] + " " + args[4] + " " + args[5]);
                 }
                 else if(args.length ==5){
                     System.out.println("Applying default values");
                     System.out.println("Brightness: " + DaemonState.brightness);
-                    client.sendCommand("keyboard static " + args[2] + " " + args[3] + " " + args[4] + " " + DaemonState.brightness);
+                    client.sendCommand("setKeyboard static " + args[2] + " " + args[3] + " " + args[4] + " " + DaemonState.brightness);
                 }
                 else {
                     System.out.println("Usage: victus-ctl keyboard static <r> <g> <b> <brightness>");
@@ -104,17 +101,18 @@ public class Main {
 
     private static void handleSetFan(String[] args) throws IOException {
         switch (args[1]) {
-            case "auto" -> client.sendCommand("fan auto");
-            case "max"  -> client.sendCommand("fan max");
+            case "auto" -> client.sendCommand("setFan auto");
+            case "max"  -> client.sendCommand("setFan max");
             case "manual" -> {
                 if (args.length == 4) {
-                    client.sendCommand("fan manual " + args[2] + " " + args[3]);
+                    client.sendCommand("setFan manual " + args[2] + " " + args[3]);
                 } else if (args.length == 3) {
-                    client.sendCommand("fan manual " + args[2] + " " + args[2]);
+                    client.sendCommand("setFan manual " + args[2] + " " + args[2]);
                 } else {
                     System.out.println("Applying default values");
                     System.out.println("FAN1: " + DaemonState.fan1_target);
                     System.out.println("FAN2: " + DaemonState.fan2_target);
+                    client.sendCommand("setFan manual " + DaemonState.fan2_target + " " + DaemonState.fan2_target);
                 }
             }
             default -> System.out.println("Unknown fan command. Run 'victus-ctl help'");

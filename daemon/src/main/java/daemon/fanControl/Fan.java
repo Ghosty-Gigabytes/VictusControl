@@ -15,7 +15,7 @@ public class Fan implements Runnable {
     private final ExecutorService service = Executors.newSingleThreadExecutor();
 
 
-
+    @SuppressWarnings("BusyWait")
     @Override
     public void run() {
         applyMode(DaemonState.fanMode);

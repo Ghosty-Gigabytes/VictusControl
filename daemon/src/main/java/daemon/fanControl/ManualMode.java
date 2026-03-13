@@ -8,14 +8,13 @@ import java.nio.file.Path;
 
 public class ManualMode implements Runnable {
     @Override
+    @SuppressWarnings("BusyWait")
     public void run() {
         setFanSpeed();
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 Thread.sleep(100_000);
-                if (getFanSpeed(1) == DaemonState.fan1_target && getFanSpeed(2) == DaemonState.fan2_target) {
-
-                } else {
+                if (!(getFanSpeed(1) == DaemonState.fan1_target && getFanSpeed(2) == DaemonState.fan2_target)) {
                     setFanSpeed();
                 }
 
@@ -24,7 +23,7 @@ public class ManualMode implements Runnable {
             }
         }
     }
-
+    @SuppressWarnings("BusyWait")
     private void setFanSpeed() {
         while (!Thread.currentThread().isInterrupted()) {
             try {

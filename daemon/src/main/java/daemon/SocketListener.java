@@ -73,6 +73,8 @@ public class SocketListener implements Runnable {
     }
 
     private void handleGetRGB(SocketChannel client) {
+        JSONObject keyboardData = new JSONObject();
+
     }
 
     private void handleGetFan(SocketChannel client) {

@@ -11,6 +11,7 @@ public class Keyboard implements Runnable {
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private Future<?> activeMode;
 
+    @SuppressWarnings("BusyWait")
     @Override
     public void run() {
         applyMode(DaemonState.rgbMode);
