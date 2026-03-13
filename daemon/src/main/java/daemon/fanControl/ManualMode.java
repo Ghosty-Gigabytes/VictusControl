@@ -8,11 +8,10 @@ import java.nio.file.Path;
 
 public class ManualMode implements Runnable {
     private final DaemonState state;
-    private final Path path;
 
-    public ManualMode(DaemonState state, Path path) {
+
+    public ManualMode(DaemonState state) {
         this.state = state;
-        this.path = path;
     }
 
     @Override
@@ -36,8 +35,8 @@ public class ManualMode implements Runnable {
     private void setFanSpeed() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                Files.writeString(Path.of(path + "/fan1_target"), String.valueOf(state.fan1_target));
-                Files.writeString(Path.of(path + "/fan2_target"), String.valueOf(state.fan2_target));
+                Files.writeString(Path.of(state.hwmonPath + "/fan1_target"), String.valueOf(state.fan1_target));
+                Files.writeString(Path.of(state.hwmonPath + "/fan2_target"), String.valueOf(state.fan2_target));
             } catch (IOException e) {
                 throw new RuntimeException("Target files not found", e);
             }
@@ -55,7 +54,7 @@ public class ManualMode implements Runnable {
 
     private int getFanSpeed(int fan) {
         try {
-            return Integer.parseInt(Files.readString(Path.of(path + "/fan" + fan + "_input")));
+            return Integer.parseInt(Files.readString(Path.of(state.hwmonPath + "/fan" + fan + "_input")));
         } catch (IOException e) {
             throw new RuntimeException("fan" + fan + "_input file not found", e);
         }
