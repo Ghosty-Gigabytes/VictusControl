@@ -140,7 +140,6 @@ class KeyboardTab(QWidget):
         root.setContentsMargins(32, 32, 32, 32)
         root.setSpacing(28)
 
-        # ── mode ──────────────────────────────────────────────
         root.addWidget(self._section_label("MODE"))
 
         mode_row = QHBoxLayout()
@@ -162,7 +161,6 @@ class KeyboardTab(QWidget):
 
         root.addWidget(self._divider())
 
-        # ── brightness & speed ────────────────────────────────
         root.addWidget(self._section_label("BRIGHTNESS & SPEED"))
 
         self._brightness = SliderRow("Brightness", 0, 255, 255)
@@ -176,7 +174,6 @@ class KeyboardTab(QWidget):
 
         root.addWidget(self._divider())
 
-        # ── color picker (static only) ────────────────────────
         root.addWidget(self._section_label("COLOR  —  static mode only"))
 
         color_row = QHBoxLayout()
@@ -219,7 +216,6 @@ class KeyboardTab(QWidget):
 
         self._update_mode_buttons()
 
-    # ── helpers ───────────────────────────────────────────────
 
     def _section_label(self, text: str) -> QLabel:
         lbl = QLabel(text)
@@ -237,8 +233,6 @@ class KeyboardTab(QWidget):
             "background: rgba(255,255,255,0.06); border: none; max-height: 1px;"
         )
         return line
-
-    # ── state ─────────────────────────────────────────────────
 
     def _load_state(self):
         """Query daemon for current keyboard state and populate UI."""

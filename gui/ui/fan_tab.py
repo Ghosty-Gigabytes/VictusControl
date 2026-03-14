@@ -64,7 +64,6 @@ class FanTab(QWidget):
         root.setContentsMargins(32, 32, 32, 32)
         root.setSpacing(28)
 
-        # ── mode ──────────────────────────────────────────────
         root.addWidget(self._section_label("MODE"))
 
         mode_row = QHBoxLayout()
@@ -86,7 +85,6 @@ class FanTab(QWidget):
 
         root.addWidget(self._divider())
 
-        # ── target RPM sliders ────────────────────────────────
         root.addWidget(self._section_label("TARGET RPM  —  manual mode only"))
 
         self._fan1_slider = SliderRow("Fan 1", 0, 5500, 2500)
@@ -100,7 +98,6 @@ class FanTab(QWidget):
 
         root.addWidget(self._divider())
 
-        # ── live RPM gauges ───────────────────────────────────
         root.addWidget(self._section_label("LIVE RPM"))
 
         gauge_row = QHBoxLayout()
@@ -125,7 +122,6 @@ class FanTab(QWidget):
 
         self._update_mode_buttons()
 
-    # ── helpers ───────────────────────────────────────────────
 
     def _section_label(self, text: str) -> QLabel:
         lbl = QLabel(text)
@@ -144,7 +140,6 @@ class FanTab(QWidget):
         )
         return line
 
-    # ── state ─────────────────────────────────────────────────
 
     def _load_state(self):
         """Query daemon for current fan state and populate UI."""
