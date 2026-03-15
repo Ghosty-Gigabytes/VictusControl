@@ -47,6 +47,25 @@ public class Main {
             throw new RuntimeException("/sys/devices/platform/hp-wmi/hwmon is either not accessible or does not exist.");
         }
 
+        System.out.println("-Getting path for AMD CPU temperature directory");
+        try(var entries = Files.list(Path.of("/sys/class/hwmon"))){
+            DaemonState.k10temp = entries
+                    .filter(Files::isDirectory)
+                    .filter(path -> path.getFileName().toString().startsWith("hwmon"))
+                    .filter(path -> path.resolve("name").toFile().exists())
+                    .filter(path -> {
+                        try{
+                            return Files.readString(path.resolve("name").toFile().toPath()).trim().equals("k10temp");
+                        } catch (IOException e) {
+                            return false;
+                        }
+                    })
+                    .findFirst()
+                    .orElseThrow(()-> new RuntimeException("AMD CPU temp directory not found"));
+            System.out.println("|-OK! Path is " + DaemonState.k10temp);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         System.out.println("-Getting fan parameters");
         try {
             DaemonState.fan1_max = Integer.parseInt(Files.readString(DaemonState.hwmonPath.resolve("fan1_max")).trim());
