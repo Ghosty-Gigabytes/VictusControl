@@ -102,8 +102,8 @@ public class SocketListener implements Runnable {
         fanData.put("fan1Max", DaemonState.fan1_max);
         fanData.put("fan2Max", DaemonState.fan2_max);
         try {
-            fanData.put("fan2Input", Integer.parseInt(Files.readString(DaemonState.hwmonPath.resolve("fan1_input")).trim()));
-            fanData.put("fan1Input", Integer.parseInt(Files.readString(DaemonState.hwmonPath.resolve("fan2_input")).trim()));
+            fanData.put("fan1Input", Integer.parseInt(Files.readString(DaemonState.hwmonPath.resolve("fan1_input")).trim()));
+            fanData.put("fan2Input", Integer.parseInt(Files.readString(DaemonState.hwmonPath.resolve("fan2_input")).trim()));
         } catch (IOException e) {
             throw new RuntimeException("Cannot read current RPM state.", e);
         }
