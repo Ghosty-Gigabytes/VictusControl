@@ -24,5 +24,6 @@ public class DaemonState {
     public static volatile int maxBrightness;
 
 
-    public static volatile Path k10temp;
+    public static volatile Path k10tempPath;
+    public static volatile Float k10temp;
 }

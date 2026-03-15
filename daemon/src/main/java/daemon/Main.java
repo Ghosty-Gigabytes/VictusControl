@@ -49,7 +49,7 @@ public class Main {
 
         System.out.println("-Getting path for AMD CPU temperature directory");
         try(var entries = Files.list(Path.of("/sys/class/hwmon"))){
-            DaemonState.k10temp = entries
+            DaemonState.k10tempPath = entries
                     .filter(Files::isDirectory)
                     .filter(path -> path.getFileName().toString().startsWith("hwmon"))
                     .filter(path -> path.resolve("name").toFile().exists())
@@ -62,11 +62,12 @@ public class Main {
                     })
                     .findFirst()
                     .orElseThrow(()-> new RuntimeException("AMD CPU temp directory not found"));
-            System.out.println("|-OK! Path is " + DaemonState.k10temp);
+            System.out.println("|-OK! Path is " + DaemonState.k10tempPath);
+            DaemonState.k10temp = Float.valueOf((Files.readString(Path.of(DaemonState.k10tempPath + "/temp1_input"))));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("-Getting fan parameters");
+        System.out.println("-Getting fan and thermal parameters");
         try {
             DaemonState.fan1_max = Integer.parseInt(Files.readString(DaemonState.hwmonPath.resolve("fan1_max")).trim());
             DaemonState.fan2_max = Integer.parseInt(Files.readString(DaemonState.hwmonPath.resolve("fan2_max")).trim());
@@ -88,6 +89,7 @@ public class Main {
                     System.out.println("|-Current PWM mode: AUTO (2)");
                     break;
             }
+            System.out.println("|-CPU Temperature: " + DaemonState.k10temp/1000 + "℃");
         } catch (IOException e) {
             throw new RuntimeException("Fan Parameters are not accessible.");
         }
