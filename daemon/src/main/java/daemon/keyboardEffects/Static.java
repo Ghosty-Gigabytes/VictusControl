@@ -1,14 +1,15 @@
 package daemon.keyboardEffects;
 
+import core.DaemonState;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class Static {
-    private static final Path brightnessPath = Path.of("/sys/class/leds/hp::kbd_backlight/brightness");
 
     public static void staticRGB(int r, int g, int b, int brightness) {
-
+        Path brightnessPath = Path.of("/sys/class/leds/hp::kbd_backlight/brightness");
         Path colorPath = Path.of("/sys/class/leds/hp::kbd_backlight/multi_intensity");
 
         try {
@@ -26,10 +27,6 @@ public class Static {
     }
 
     public static void offRGB() {
-        try {
-            Files.writeString(brightnessPath, String.valueOf(0));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        staticRGB(0,0,0, DaemonState.brightness);
     }
 }
