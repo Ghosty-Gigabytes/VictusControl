@@ -164,10 +164,10 @@ class KeyboardTab(QWidget):
         root.addWidget(self._section_label("BRIGHTNESS & SPEED"))
 
         self._brightness = SliderRow("Brightness", 0, 255, 255)
-        self._speed      = SliderRow("Speed (ms)",  5, 100,  20)
+        self._speed      = SliderRow("Delay (ms)",  1, 200,  20)
 
-        self._brightness.slider.valueChanged.connect(self._on_slider_change)
-        self._speed.slider.valueChanged.connect(self._on_slider_change)
+        self._brightness.slider.valueChanged.connect(self._on_brightness_change)
+        self._speed.slider.valueChanged.connect(self._on_delay_change)
 
         root.addWidget(self._brightness)
         root.addWidget(self._speed)
@@ -272,8 +272,9 @@ class KeyboardTab(QWidget):
         self._btn_static.setActive(self._current_mode  == "static")
         self._btn_off.setActive(self._current_mode     == "off")
 
-    def _on_slider_change(self):
-        self._send_current()
+    def _on_brightness_change(self):
+        b=self._brightness.value();
+        send_command(f"setKeyboard brightness {b}")
 
     def _pick_color(self):
         color = QColorDialog.getColor(self._static_color, self, "Pick Keyboard Color")
@@ -297,3 +298,7 @@ class KeyboardTab(QWidget):
             send_command(f"setKeyboard static {r} {g} {bl} {b}")
         elif self._current_mode == "off":
             send_command("setKeyboard off")
+
+    def _on_delay_change(self):
+        d = self._speed.value();
+        send_command(f"setKeyboard delay {d}")
