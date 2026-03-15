@@ -125,6 +125,11 @@ public class SocketListener implements Runnable {
                 break;
             case "brightness":
                 DaemonState.brightness = Integer.parseInt(parts[2]);
+                try {
+                    Files.writeString(Path.of("/sys/devices/platform/hp-wmi/leds/hp::kbd_backlight/brightness"), String.valueOf(Integer.parseInt(parts[2])));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 break;
             case "static":
                 DaemonState.rgbMode = RGBMode.OFF;
@@ -134,6 +139,8 @@ public class SocketListener implements Runnable {
                 DaemonState.brightness = Integer.parseInt(parts[5]);
                 DaemonState.rgbMode = RGBMode.STATIC;
                 break;
+            case "delay":
+                DaemonState.rgbSpeed = Integer.parseInt(parts[2]);
         }
     }
 
