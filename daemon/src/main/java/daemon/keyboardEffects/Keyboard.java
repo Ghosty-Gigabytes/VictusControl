@@ -3,6 +3,9 @@ package daemon.keyboardEffects;
 import core.DaemonState;
 import core.RGBMode;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -19,8 +22,6 @@ public class Keyboard implements Runnable {
         int prevR = DaemonState.r;
         int prevG = DaemonState.g;
         int prevB = DaemonState.b;
-        int prevBrightness = DaemonState.brightness;
-        int prevSpeed = DaemonState.rgbSpeed;
 
         while (!Thread.currentThread().isInterrupted()) {
             try {
@@ -29,7 +30,7 @@ public class Keyboard implements Runnable {
                 Thread.currentThread().interrupt();
                 break;
             }
-            boolean stateChanged = prevMode != DaemonState.rgbMode || prevBrightness != DaemonState.brightness || prevSpeed != DaemonState.rgbSpeed | prevR != DaemonState.r || prevG != DaemonState.g || prevB != DaemonState.b;
+            boolean stateChanged = prevMode != DaemonState.rgbMode || prevR != DaemonState.r || prevG != DaemonState.g || prevB != DaemonState.b;
 
             if (stateChanged) {
                 applyMode(DaemonState.rgbMode);
@@ -37,9 +38,14 @@ public class Keyboard implements Runnable {
                 prevR = DaemonState.r;
                 prevG = DaemonState.g;
                 prevB = DaemonState.b;
-                prevBrightness = DaemonState.brightness;
-                prevSpeed = DaemonState.rgbSpeed;
             }
+
+            try {
+                DaemonState.brightness = Integer.parseInt(Files.readString(Path.of("/sys/devices/platform/hp-wmi/leds/hp::kbd_backlight/brightness")).trim());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
         }
 
         executorService.shutdown();
