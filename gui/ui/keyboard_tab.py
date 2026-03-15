@@ -1,10 +1,11 @@
 import json
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QSlider, QFrame, QColorDialog
+    QPushButton, QSlider, QFrame, QColorDialog,
+    QStyleOptionSlider, QStyle
 )
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QPainter, QBrush, QPen
+from PyQt6.QtCore import Qt, QRect
+from PyQt6.QtGui import QColor, QPainter, QBrush, QPen, QMouseEvent
 from ipc.client import send_command, send_query
 
 
@@ -70,60 +71,230 @@ class ModeButton(QPushButton):
         self.setStyleSheet(self.ACTIVE_STYLE if active else self.INACTIVE_STYLE)
 
 
+class SnapSlider(QSlider):
+    """
+    QSlider subclass that jumps directly to the clicked position
+    instead of moving one step at a time.
+    Also snaps values to multiples of step.
+    """
+
+    def __init__(self, step: int = 1, parent=None):
+        super().__init__(Qt.Orientation.Horizontal, parent)
+        self._step = step
+
+    def mousePressEvent(self, event: QMouseEvent):
+        if event.button() == Qt.MouseButton.LeftButton:
+            value = self._value_from_position(event.pos().x())
+            self.setValue(value)
+            event.accept()
+        else:
+            super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event: QMouseEvent):
+        if event.buttons() & Qt.MouseButton.LeftButton:
+            value = self._value_from_position(event.pos().x())
+            self.setValue(value)
+            event.accept()
+        else:
+            super().mouseMoveEvent(event)
+
+    def _value_from_position(self, x: int) -> int:
+        """Convert a pixel x position to a snapped slider value."""
+        opt = QStyleOptionSlider()
+        self.initStyleOption(opt)
+
+        groove: QRect = self.style().subControlRect(
+            QStyle.ComplexControl.CC_Slider,
+            opt,
+            QStyle.SubControl.SC_SliderGroove,
+            self
+        )
+        handle: QRect = self.style().subControlRect(
+            QStyle.ComplexControl.CC_Slider,
+            opt,
+            QStyle.SubControl.SC_SliderHandle,
+            self
+        )
+
+        # usable groove width excluding handle half-widths
+        groove_start = groove.left() + handle.width() // 2
+        groove_end   = groove.right() - handle.width() // 2
+        groove_width = max(groove_end - groove_start, 1)
+
+        # clamp x to groove bounds
+        x_clamped = max(groove_start, min(groove_end, x))
+
+        ratio = (x_clamped - groove_start) / groove_width
+        span  = self.maximum() - self.minimum()
+        raw   = self.minimum() + ratio * span
+
+        # snap to multiple of step
+        if self._step > 1:
+            snapped = round(raw / self._step) * self._step
+        else:
+            snapped = round(raw)
+
+        return max(self.minimum(), min(self.maximum(), snapped))
+
+
 class SliderRow(QWidget):
-    """Label + slider + value display in a single row."""
+    """
+    Label + SnapSlider + value display in a single row.
+    Shows min/max values below the slider in subtle grey.
+    Click anywhere on the slider to jump to that value instantly.
+    """
 
-    def __init__(self, label: str, min_val: int, max_val: int, default: int, parent=None):
+    SLIDER_STYLE_ENABLED = """
+        QSlider {
+            min-height: 32px;
+        }
+        QSlider::groove:horizontal {
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+        }
+        QSlider::handle:horizontal {
+            width: 24px;
+            height: 24px;
+            background: #e05c2a;
+            border-radius: 12px;
+            margin: -10px 0;
+        }
+        QSlider::sub-page:horizontal {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #c93f15, stop:1 #e05c2a);
+            border-radius: 2px;
+        }
+    """
+
+    SLIDER_STYLE_DISABLED = """
+        QSlider {
+            min-height: 32px;
+        }
+        QSlider::groove:horizontal {
+            height: 4px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 2px;
+        }
+        QSlider::handle:horizontal {
+            width: 24px;
+            height: 24px;
+            background: #333;
+            border-radius: 12px;
+            margin: -10px 0;
+        }
+        QSlider::sub-page:horizontal {
+            background: rgba(255,255,255,0.06);
+            border-radius: 2px;
+        }
+    """
+
+    def __init__(self, label: str, min_val: int, max_val: int,
+                 default: int, step: int = 1, parent=None):
         super().__init__(parent)
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(16)
 
-        lbl = QLabel(label)
-        lbl.setFixedWidth(90)
-        lbl.setStyleSheet(
+        self._step    = step
+        self._min_val = min_val
+        self._max_val = max_val
+
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(3)
+
+        # ── main slider row ───────────────────────────────────
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(16)
+
+        self._lbl = QLabel(label)
+        self._lbl.setFixedWidth(90)
+        self._lbl.setStyleSheet(
             "color: #888; font-size: 12px; "
             "font-family: 'JetBrains Mono', monospace;"
         )
 
-        self.slider = QSlider(Qt.Orientation.Horizontal)
+        self.slider = SnapSlider(step=step)
         self.slider.setRange(min_val, max_val)
-        self.slider.setValue(default)
-        self.slider.setStyleSheet("""
-            QSlider::groove:horizontal {
-                height: 4px;
-                background: rgba(255,255,255,0.1);
-                border-radius: 2px;
-            }
-            QSlider::handle:horizontal {
-                width: 16px; height: 16px;
-                background: #e05c2a;
-                border-radius: 8px;
-                margin: -6px 0;
-            }
-            QSlider::sub-page:horizontal {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #c93f15, stop:1 #e05c2a);
-                border-radius: 2px;
-            }
-        """)
+        self.slider.setValue(self._snap(default))
+        self.slider.setSingleStep(step)
+        self.slider.setPageStep(step)
+        self.slider.setStyleSheet(self.SLIDER_STYLE_ENABLED)
 
-        self.value_lbl = QLabel(str(default))
-        self.value_lbl.setFixedWidth(36)
-        self.value_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.value_lbl.setStyleSheet(
+        self.slider.valueChanged.connect(self._on_value_changed)
+
+        self._value_lbl = QLabel(str(self._snap(default)))
+        self._value_lbl.setFixedWidth(36)
+        self._value_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self._value_lbl.setStyleSheet(
             "color: #e05c2a; font-size: 12px; "
             "font-family: 'JetBrains Mono', monospace; font-weight: 600;"
         )
 
-        self.slider.valueChanged.connect(lambda v: self.value_lbl.setText(str(v)))
+        row.addWidget(self._lbl)
+        row.addWidget(self.slider)
+        row.addWidget(self._value_lbl)
+        outer.addLayout(row)
 
-        layout.addWidget(lbl)
-        layout.addWidget(self.slider)
-        layout.addWidget(self.value_lbl)
+        # ── min/max hint row ──────────────────────────────────
+        hint_row = QHBoxLayout()
+        hint_row.setContentsMargins(90 + 16, 0, 36 + 16, 0)
+        hint_row.setSpacing(0)
+
+        hint_style = (
+            "color: #2a2a2a; font-size: 10px; "
+            "font-family: 'JetBrains Mono', monospace;"
+        )
+
+        self._min_lbl = QLabel(str(min_val))
+        self._min_lbl.setStyleSheet(hint_style)
+
+        self._max_lbl = QLabel(str(max_val))
+        self._max_lbl.setStyleSheet(hint_style)
+        self._max_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
+
+        hint_row.addWidget(self._min_lbl)
+        hint_row.addStretch()
+        hint_row.addWidget(self._max_lbl)
+        outer.addLayout(hint_row)
+
+    # ── snapping ──────────────────────────────────────────────
+
+    def _snap(self, value: int) -> int:
+        if self._step <= 1:
+            return value
+        snapped = round(value / self._step) * self._step
+        return max(self._min_val, min(self._max_val, snapped))
+
+    def _on_value_changed(self, value: int):
+        """Keep value label in sync. SnapSlider already snaps on click/drag."""
+        self._value_lbl.setText(str(value))
+
+    # ── public API ────────────────────────────────────────────
 
     def value(self) -> int:
         return self.slider.value()
+
+    def set_range(self, min_val: int, max_val: int):
+        self._min_val = min_val
+        self._max_val = max_val
+        self.slider.setRange(min_val, max_val)
+        self._min_lbl.setText(str(min_val))
+        self._max_lbl.setText(str(max_val))
+
+    def setEnabled(self, enabled: bool):
+        super().setEnabled(enabled)
+        self.slider.setEnabled(enabled)
+        self.slider.setStyleSheet(
+            self.SLIDER_STYLE_ENABLED if enabled else self.SLIDER_STYLE_DISABLED
+        )
+        self._lbl.setStyleSheet(
+            f"color: {'#888' if enabled else '#2a2a2a'}; "
+            "font-size: 12px; font-family: 'JetBrains Mono', monospace;"
+        )
+        self._value_lbl.setStyleSheet(
+            f"color: {'#e05c2a' if enabled else '#2a2a2a'}; "
+            "font-size: 12px; font-family: 'JetBrains Mono', monospace; font-weight: 600;"
+        )
 
 
 class KeyboardTab(QWidget):
@@ -140,6 +311,7 @@ class KeyboardTab(QWidget):
         root.setContentsMargins(32, 32, 32, 32)
         root.setSpacing(28)
 
+        # ── mode ──────────────────────────────────────────────
         root.addWidget(self._section_label("MODE"))
 
         mode_row = QHBoxLayout()
@@ -161,10 +333,11 @@ class KeyboardTab(QWidget):
 
         root.addWidget(self._divider())
 
+        # ── brightness & delay ────────────────────────────────
         root.addWidget(self._section_label("BRIGHTNESS & SPEED"))
 
-        self._brightness = SliderRow("Brightness", 0, 255, 255)
-        self._speed      = SliderRow("Delay (ms)",  1, 200,  20)
+        self._brightness = SliderRow("Brightness", 0, 255, 255, step=10)
+        self._speed      = SliderRow("Delay (ms)",  1, 200,  20, step=5)
 
         self._brightness.slider.valueChanged.connect(self._on_brightness_change)
         self._speed.slider.valueChanged.connect(self._on_delay_change)
@@ -174,6 +347,7 @@ class KeyboardTab(QWidget):
 
         root.addWidget(self._divider())
 
+        # ── color picker ──────────────────────────────────────
         root.addWidget(self._section_label("COLOR  —  static mode only"))
 
         color_row = QHBoxLayout()
@@ -182,8 +356,8 @@ class KeyboardTab(QWidget):
         self._color_preview = ColorPreview()
         self._color_preview.set_color(self._static_color)
 
-        pick_btn = QPushButton("Pick Color")
-        pick_btn.setStyleSheet("""
+        self._pick_btn = QPushButton("Pick Color")
+        self._pick_btn.setStyleSheet("""
             QPushButton {
                 background: rgba(255,255,255,0.05);
                 color: #ccc;
@@ -197,8 +371,13 @@ class KeyboardTab(QWidget):
                 background: rgba(255,255,255,0.1);
                 color: white;
             }
+            QPushButton:disabled {
+                background: rgba(255,255,255,0.02);
+                color: #2a2a2a;
+                border: 1px solid rgba(255,255,255,0.03);
+            }
         """)
-        pick_btn.clicked.connect(self._pick_color)
+        self._pick_btn.clicked.connect(self._pick_color)
 
         self._color_hex = QLabel(self._static_color.name().upper())
         self._color_hex.setStyleSheet(
@@ -207,15 +386,15 @@ class KeyboardTab(QWidget):
         )
 
         color_row.addWidget(self._color_preview)
-        color_row.addWidget(pick_btn)
+        color_row.addWidget(self._pick_btn)
         color_row.addWidget(self._color_hex)
         color_row.addStretch()
         root.addLayout(color_row)
 
         root.addStretch()
-
         self._update_mode_buttons()
 
+    # ── helpers ───────────────────────────────────────────────
 
     def _section_label(self, text: str) -> QLabel:
         lbl = QLabel(text)
@@ -234,30 +413,29 @@ class KeyboardTab(QWidget):
         )
         return line
 
+    # ── state ─────────────────────────────────────────────────
+
     def _load_state(self):
-        """Query daemon for current keyboard state and populate UI."""
         response = send_query("getKeyboard")
         if not response:
             return
         try:
             data = json.loads(response)
 
-            # sliders
             self._brightness.slider.setValue(int(data.get("brightness", 255)))
             self._speed.slider.setValue(int(data.get("speed", 20)))
 
-            # color
-            r  = int(data.get("r", 255))
-            g  = int(data.get("g", 0))
-            b  = int(data.get("b", 0))
+            r = int(data.get("r", 255))
+            g = int(data.get("g", 0))
+            b = int(data.get("b", 0))
             self._static_color = QColor(r, g, b)
             self._color_preview.set_color(self._static_color)
             self._color_hex.setText(self._static_color.name().upper())
 
-            # mode — set last so sliders are ready before any send
             mode = data.get("rgbMode", "RAINBOW").upper()
             self._current_mode = mode.lower()
             self._update_mode_buttons()
+            self._update_controls()
 
         except Exception as e:
             print(f"[KeyboardTab] Failed to load state: {e}")
@@ -265,6 +443,7 @@ class KeyboardTab(QWidget):
     def _set_mode(self, mode: str):
         self._current_mode = mode
         self._update_mode_buttons()
+        self._update_controls()
         self._send_current()
 
     def _update_mode_buttons(self):
@@ -272,9 +451,26 @@ class KeyboardTab(QWidget):
         self._btn_static.setActive(self._current_mode  == "static")
         self._btn_off.setActive(self._current_mode     == "off")
 
+    def _update_controls(self):
+        mode = self._current_mode
+        self._brightness.setEnabled(mode != "off")
+        self._speed.setEnabled(mode == "rainbow")
+
+        color_on = (mode == "static")
+        self._pick_btn.setEnabled(color_on)
+        self._color_preview.setEnabled(color_on)
+        self._color_hex.setStyleSheet(
+            f"color: {'#555' if color_on else '#2a2a2a'}; "
+            "font-size: 12px; font-family: 'JetBrains Mono', monospace;"
+        )
+
     def _on_brightness_change(self):
-        b=self._brightness.value();
-        send_command(f"setKeyboard brightness {b}")
+        if self._current_mode != "off":
+            send_command(f"setKeyboard brightness {self._brightness.value()}")
+
+    def _on_delay_change(self):
+        if self._current_mode == "rainbow":
+            send_command(f"setKeyboard delay {self._speed.value()}")
 
     def _pick_color(self):
         color = QColorDialog.getColor(self._static_color, self, "Pick Keyboard Color")
@@ -298,7 +494,3 @@ class KeyboardTab(QWidget):
             send_command(f"setKeyboard static {r} {g} {bl} {b}")
         elif self._current_mode == "off":
             send_command("setKeyboard off")
-
-    def _on_delay_change(self):
-        d = self._speed.value();
-        send_command(f"setKeyboard delay {d}")

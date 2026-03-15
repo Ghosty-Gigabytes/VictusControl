@@ -82,15 +82,14 @@ class TempGauge(QWidget):
         layout.addWidget(self.temp_label)
 
     def set_temp(self, temp: float):
-        """Update label with one decimal place and shift color cool→warm."""
-        self.temp_label.setText(f"{temp:.1f} °C")  # e.g. 72.5 °C
+        self.temp_label.setText(f"{temp:.1f} °C")
 
         if temp < 60.0:
-            color = "#2ecc71"   # green  — cool
+            color = "#2ecc71"
         elif temp < 80.0:
-            color = "#e0a12a"   # amber  — warm
+            color = "#e0a12a"
         else:
-            color = "#e05c2a"   # orange — hot
+            color = "#e05c2a"
 
         self.temp_label.setStyleSheet(
             f"color: {color}; font-size: 22px; font-weight: 700; "
@@ -99,6 +98,8 @@ class TempGauge(QWidget):
 
 
 class FanTab(QWidget):
+
+    _DEFAULT_MAX_RPM = 5500
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -115,6 +116,7 @@ class FanTab(QWidget):
         root.setContentsMargins(32, 32, 32, 32)
         root.setSpacing(28)
 
+        # ── mode ──────────────────────────────────────────────
         root.addWidget(self._section_label("MODE"))
 
         mode_row = QHBoxLayout()
@@ -136,11 +138,19 @@ class FanTab(QWidget):
 
         root.addWidget(self._divider())
 
+        # ── target RPM sliders ────────────────────────────────
         root.addWidget(self._section_label("TARGET RPM  —  manual mode only"))
 
-        self._fan1_slider = SliderRow("Fan 1", 0, 5500, 2500)
-        self._fan2_slider = SliderRow("Fan 2", 0, 5500, 2500)
+        # step=100 so each tick moves 100 RPM
+        # max updated from daemon in _load_state()
+        self._fan1_slider = SliderRow(
+            "Fan 1", 0, self._DEFAULT_MAX_RPM, 2500, step=100
+        )
+        self._fan2_slider = SliderRow(
+            "Fan 2", 0, self._DEFAULT_MAX_RPM, 2500, step=100
+        )
 
+        # connect AFTER both sliders exist to avoid cross-firing
         self._fan1_slider.slider.valueChanged.connect(self._on_slider_change)
         self._fan2_slider.slider.valueChanged.connect(self._on_slider_change)
 
@@ -149,6 +159,7 @@ class FanTab(QWidget):
 
         root.addWidget(self._divider())
 
+        # ── live gauges ───────────────────────────────────────
         root.addWidget(self._section_label("LIVE RPM & TEMPERATURE"))
 
         gauge_row = QHBoxLayout()
@@ -173,6 +184,7 @@ class FanTab(QWidget):
 
         root.addStretch()
         self._update_mode_buttons()
+        self._update_controls()
 
     # ── helpers ───────────────────────────────────────────────
 
@@ -204,13 +216,27 @@ class FanTab(QWidget):
             data     = json.loads(response)
             pwm_mode = int(data.get("pwmMode", 2))
 
+            # update slider ranges from real hardware max values
+            fan1_max = int(data.get("fan1Max", self._DEFAULT_MAX_RPM))
+            fan2_max = int(data.get("fan2Max", self._DEFAULT_MAX_RPM))
+            if fan1_max > 0:
+                self._fan1_slider.set_range(0, fan1_max)
+            if fan2_max > 0:
+                self._fan2_slider.set_range(0, fan2_max)
+
             mode_map = {0: "max", 1: "manual", 2: "auto"}
             self._current_mode = mode_map.get(pwm_mode, "auto")
             self._update_mode_buttons()
+            self._update_controls()
 
+            # populate slider values only when in manual mode
             if pwm_mode == 1:
-                self._fan1_slider.slider.setValue(int(data.get("fan1Target", 2500)))
-                self._fan2_slider.slider.setValue(int(data.get("fan2Target", 2500)))
+                self._fan1_slider.slider.setValue(
+                    int(data.get("fan1Target", 2500))   # fan1 slider ← fan1Target
+                )
+                self._fan2_slider.slider.setValue(
+                    int(data.get("fan2Target", 2500))   # fan2 slider ← fan2Target
+                )
 
             cpu_temp = float(data.get("cpuTemp", 0.0))
             if cpu_temp:
@@ -222,12 +248,19 @@ class FanTab(QWidget):
     def _set_mode(self, mode: str):
         self._current_mode = mode
         self._update_mode_buttons()
+        self._update_controls()
         self._send_current()
 
     def _update_mode_buttons(self):
         self._btn_auto.setActive(self._current_mode   == "auto")
         self._btn_max.setActive(self._current_mode    == "max")
         self._btn_manual.setActive(self._current_mode == "manual")
+
+    def _update_controls(self):
+        """Sliders only active in manual mode."""
+        manual = (self._current_mode == "manual")
+        self._fan1_slider.setEnabled(manual)
+        self._fan2_slider.setEnabled(manual)
 
     def _on_slider_change(self):
         if self._current_mode == "manual":
@@ -239,13 +272,13 @@ class FanTab(QWidget):
         elif self._current_mode == "max":
             send_command("setFan max")
         elif self._current_mode == "manual":
-            f1 = self._fan1_slider.value()
-            f2 = self._fan2_slider.value()
+            f1 = self._fan1_slider.value()  # fan1 slider → fan1 target
+            f2 = self._fan2_slider.value()  # fan2 slider → fan2 target
             send_command(f"setFan manual {f1} {f2}")
 
     def _on_rpm_update(self, fan1: int, fan2: int, cpu_temp: float):
-        self._gauge1.set_rpm(fan1)
-        self._gauge2.set_rpm(fan2)
+        self._gauge1.set_rpm(fan1)   # fan1 gauge ← fan1Input
+        self._gauge2.set_rpm(fan2)   # fan2 gauge ← fan2Input
         self._temp_gauge.set_temp(cpu_temp)
         self._status_lbl.setText("Updated just now")
 
