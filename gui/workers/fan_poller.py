@@ -32,7 +32,7 @@ class FanPoller(QThread):
             else:
                 self.error.emit("Daemon not responding")
 
-            time.sleep(2.0)
+            time.sleep(0.5)
 
     def stop(self):
         self._running = False
