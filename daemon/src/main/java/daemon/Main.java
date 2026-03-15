@@ -4,6 +4,7 @@ package daemon;
 import core.DaemonState;
 import daemon.fanControl.Fan;
 import daemon.keyboardEffects.Keyboard;
+import daemon.temperature.Temperature;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,11 +17,15 @@ public class Main {
         System.out.println("++++VictusControl daemon is starting up++++");
         Thread fanThread = new Thread(new Fan(), "Fan Thread");
         Thread keyboardThread = new Thread(new Keyboard(), "Keyboard Thread");
+        Thread tempThread = new Thread(new Temperature(), "Temperature Polling Thread");
         Thread socketThread = new Thread(new SocketListener(), "SocketListener Thread");
+
         initialCheck();
+
         System.out.println("++++Starting worker threads++++");
         fanThread.start();
         keyboardThread.start();
+        tempThread.start();
         socketThread.start();
 
     }

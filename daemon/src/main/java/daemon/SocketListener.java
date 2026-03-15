@@ -107,7 +107,7 @@ public class SocketListener implements Runnable {
         } catch (IOException e) {
             throw new RuntimeException("Cannot read current RPM state.", e);
         }
-
+        fanData.put("cpuTemp", DaemonState.k10temp/1000);
         PrintWriter writer = new PrintWriter(Channels.newOutputStream(client), true);
         writer.println(fanData);
     }

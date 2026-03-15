@@ -53,6 +53,7 @@ public class Main {
         System.out.println("|-Fan2 Max RPM:" + fanData.get("fan2Max"));
         System.out.println("|-Fan1 Current RPM:" + fanData.get("fan1Input"));
         System.out.println("|-Fan2 Current RPM:" + fanData.get("fan2Input"));
+        System.out.println("|-CPU Temperature: " + fanData.get("cpuTemp") + "℃");
     }
 
     private static void handleGetKeyboard() throws IOException {
