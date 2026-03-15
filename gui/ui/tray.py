@@ -57,6 +57,8 @@ class TrayIcon(QSystemTrayIcon):
         fan_menu.addAction("Max",    lambda: send_command("setFan max"))
 
         menu.addSeparator()
+        menu.addAction("About", self._show_about)
+        menu.addSeparator()
         menu.addAction("Quit", self._quit)
 
         self.setContextMenu(menu)
@@ -69,6 +71,10 @@ class TrayIcon(QSystemTrayIcon):
         self._window.show()
         self._window.raise_()
         self._window.activateWindow()
+
+    def _show_about(self):
+        self._show_window()
+        self._window._show_about()
 
     def _quit(self):
         from PyQt6.QtWidgets import QApplication
