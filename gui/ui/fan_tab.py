@@ -1,7 +1,7 @@
 import json
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QFrame
+    QFrame
 )
 from PyQt6.QtCore import Qt
 from ui.keyboard_tab import ModeButton, SliderRow
@@ -45,6 +45,57 @@ class RPMGauge(QWidget):
 
     def set_rpm(self, rpm: int):
         self.rpm_label.setText(f"{rpm:,}")
+
+
+class TempGauge(QWidget):
+    """Card showing live CPU temperature with one decimal place."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(160, 100)
+        self.setStyleSheet("""
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 12px;
+        """)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(4)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        lbl = QLabel("CPU TEMP")
+        lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lbl.setStyleSheet(
+            "color: #444; font-size: 10px; "
+            "font-family: 'JetBrains Mono', monospace; letter-spacing: 2px;"
+        )
+
+        self.temp_label = QLabel("—")
+        self.temp_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.temp_label.setStyleSheet(
+            "color: #e05c2a; font-size: 22px; font-weight: 700; "
+            "font-family: 'JetBrains Mono', monospace;"
+        )
+
+        layout.addWidget(lbl)
+        layout.addWidget(self.temp_label)
+
+    def set_temp(self, temp: float):
+        """Update label with one decimal place and shift color cool→warm."""
+        self.temp_label.setText(f"{temp:.1f} °C")  # e.g. 72.5 °C
+
+        if temp < 60.0:
+            color = "#2ecc71"   # green  — cool
+        elif temp < 80.0:
+            color = "#e0a12a"   # amber  — warm
+        else:
+            color = "#e05c2a"   # orange — hot
+
+        self.temp_label.setStyleSheet(
+            f"color: {color}; font-size: 22px; font-weight: 700; "
+            "font-family: 'JetBrains Mono', monospace;"
+        )
 
 
 class FanTab(QWidget):
@@ -98,16 +149,18 @@ class FanTab(QWidget):
 
         root.addWidget(self._divider())
 
-        root.addWidget(self._section_label("LIVE RPM"))
+        root.addWidget(self._section_label("LIVE RPM & TEMPERATURE"))
 
         gauge_row = QHBoxLayout()
         gauge_row.setSpacing(16)
 
-        self._gauge1 = RPMGauge("FAN 1")
-        self._gauge2 = RPMGauge("FAN 2")
+        self._gauge1     = RPMGauge("FAN 1")
+        self._gauge2     = RPMGauge("FAN 2")
+        self._temp_gauge = TempGauge()
 
         gauge_row.addWidget(self._gauge1)
         gauge_row.addWidget(self._gauge2)
+        gauge_row.addWidget(self._temp_gauge)
         gauge_row.addStretch()
         root.addLayout(gauge_row)
 
@@ -119,9 +172,9 @@ class FanTab(QWidget):
         root.addWidget(self._status_lbl)
 
         root.addStretch()
-
         self._update_mode_buttons()
 
+    # ── helpers ───────────────────────────────────────────────
 
     def _section_label(self, text: str) -> QLabel:
         lbl = QLabel(text)
@@ -140,6 +193,7 @@ class FanTab(QWidget):
         )
         return line
 
+    # ── state ─────────────────────────────────────────────────
 
     def _load_state(self):
         """Query daemon for current fan state and populate UI."""
@@ -147,7 +201,7 @@ class FanTab(QWidget):
         if not response:
             return
         try:
-            data = json.loads(response)
+            data     = json.loads(response)
             pwm_mode = int(data.get("pwmMode", 2))
 
             mode_map = {0: "max", 1: "manual", 2: "auto"}
@@ -157,6 +211,10 @@ class FanTab(QWidget):
             if pwm_mode == 1:
                 self._fan1_slider.slider.setValue(int(data.get("fan1Target", 2500)))
                 self._fan2_slider.slider.setValue(int(data.get("fan2Target", 2500)))
+
+            cpu_temp = float(data.get("cpuTemp", 0.0))
+            if cpu_temp:
+                self._temp_gauge.set_temp(cpu_temp)
 
         except Exception as e:
             print(f"[FanTab] Failed to load state: {e}")
@@ -185,9 +243,10 @@ class FanTab(QWidget):
             f2 = self._fan2_slider.value()
             send_command(f"setFan manual {f1} {f2}")
 
-    def _on_rpm_update(self, fan1: int, fan2: int):
+    def _on_rpm_update(self, fan1: int, fan2: int, cpu_temp: float):
         self._gauge1.set_rpm(fan1)
         self._gauge2.set_rpm(fan2)
+        self._temp_gauge.set_temp(cpu_temp)
         self._status_lbl.setText("Updated just now")
 
     def _on_poller_error(self, msg: str):
