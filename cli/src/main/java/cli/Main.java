@@ -17,10 +17,10 @@ public class Main {
 
         try {
             switch (args[0]) {
-                case "setKeyboard" -> handleSetKeyboard(args);
-                case "setFan"      -> handleSetFan(args);
-                case "getKeyboard" -> handleGetKeyboard();
-                case "getFan"      -> handleGetFan();
+                case "setkeyboard" -> handleSetKeyboard(args);
+                case "setfan"      -> handleSetFan(args);
+                case "getkeyboard" -> handleGetKeyboard();
+                case "getfan"      -> handleGetFan();
                 case "help"        -> printHelp();
                 case "about"       -> printAbout();
                 default         -> System.out.println("Unknown command. Run 'victus-ctl help'");
@@ -95,6 +95,8 @@ public class Main {
                 }
             }
             case "off"     -> client.sendCommand("setKeyboard off");
+            case "brightness" -> client.sendCommand("setKeyboard brightness " + args[2]);
+            case "delay" -> client.sendCommand("setKeyboard delay " + args[2]);
             case "static"  -> {
                 if (args.length == 6) {
                     client.sendCommand("setKeyboard static " + args[2] + " " + args[3] + " " + args[4] + " " + args[5]);
@@ -137,19 +139,25 @@ public class Main {
                 victus-ctl — Victus laptop control CLI
                 
                 Keyboard:
-                  victus-cli keyboard rainbow
-                  victus-cli keyboard rainbow <brightness>
-                  victus-ctl keyboard rainbow <brightness> <delay>
-                  victus-ctl keyboard off
-                  victus-ctl keyboard static <r> <g> <b>
-                  victus-ctl keyboard static <r> <g> <b> <brightness>
+                  victus-cli setkeyboard rainbow
+                  victus-cli setkeyboard rainbow <brightness>
+                  victus-ctl setkeyboard rainbow <brightness> <delay>
+                  victus-ctl setkeyboard off
+                  victus-ctl setkeyboard static <r> <g> <b>
+                  victus-ctl setkeyboard static <r> <g> <b> <brightness>
+                  victus-ctl setkeyboard brightness <brightness>
+                  victus-ctl setkeyboard delay <delay>
+                  
+                  victus-ctl getkeyboard
                 
                 Fan:
-                  victus-ctl fan auto
-                  victus-ctl fan max
-                  victus-ctl fan manual
-                  victus-ctl fan manual <rpm>
-                  victus-ctl fan manual <fan1_rpm> <fan2_rpm>
+                  victus-ctl setfan auto
+                  victus-ctl setfan max
+                  victus-ctl setfan manual
+                  victus-ctl setfan manual <rpm>
+                  victus-ctl setfan manual <fan1_rpm> <fan2_rpm>
+                  
+                  victus-ctl getfan
                 """);
     }
 
