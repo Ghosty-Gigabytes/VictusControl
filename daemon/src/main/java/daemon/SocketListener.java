@@ -11,8 +11,13 @@ import java.net.UnixDomainSocketAddress;
 import java.nio.channels.Channels;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.GroupPrincipal;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.nio.file.attribute.UserPrincipalLookupService;
 
 public class SocketListener implements Runnable {
 
@@ -34,6 +39,25 @@ public class SocketListener implements Runnable {
 
         try (ServerSocketChannel channel = ServerSocketChannel.open(StandardProtocolFamily.UNIX)) {
             channel.bind(socketAddress);
+            // now set group + permissions on both dir and socket file
+            UserPrincipalLookupService lookup = FileSystems.getDefault()
+                    .getUserPrincipalLookupService();
+            GroupPrincipal group = lookup.lookupPrincipalByGroupName("victus-control");
+
+            // fix directory — 770 so group can enter it
+            PosixFileAttributeView dirView = Files.getFileAttributeView(
+                    Path.of("/run/victus-control"), PosixFileAttributeView.class
+            );
+            dirView.setGroup(group);
+            dirView.setPermissions(PosixFilePermissions.fromString("rwxrwx---"));
+
+            // fix socket file — 660 so group can connect
+            PosixFileAttributeView sockView = Files.getFileAttributeView(
+                    socketPath, PosixFileAttributeView.class
+            );
+            sockView.setGroup(group);
+            sockView.setPermissions(PosixFilePermissions.fromString("rw-rw----"));
+
             System.out.println("Socket listening at /run/victus-control/victus.sock");
             while (!Thread.currentThread().isInterrupted()) {
                 try (SocketChannel client = channel.accept()) {
